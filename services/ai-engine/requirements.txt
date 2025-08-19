@@ -1,0 +1,38 @@
+# AI Engine v6.0 - Dependencias por niveles
+
+# BÁSICO (REQUERIDO)
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-dotenv==1.0.0
+python-multipart==0.0.6
+httpx==0.25.2
+
+# AVANZADO (OPCIONAL - modelos locales)
+# torch>=2.0.0
+# transformers>=4.35.0
+# accelerate>=0.24.0
+# sentence-transformers>=2.2.0
+
+# COMPLETO (OPCIONAL - APIs cloud)
+# openai>=1.3.0
+# anthropic>=0.7.0
+# google-generativeai>=0.3.0
+
+# PREMIUM (OPCIONAL - cache y BD)
+# redis>=5.0.0
+# sqlalchemy>=2.0.0
+
+# CIENTÍFICO (OPCIONAL)
+# numpy>=1.24.0
+# pandas>=2.1.0
+
+# TESTING (OPCIONAL)
+# pytest>=7.4.0
+# pytest-asyncio>=0.21.0
+
+# Para instalar por niveles:
+# pip install -r requirements.txt  # Solo básico
+# pip install torch transformers  # + modelos locales
+# pip install openai anthropic google-generativeai  # + APIs cloud
+# pip install redis sqlalchemy  # + cache y BD
