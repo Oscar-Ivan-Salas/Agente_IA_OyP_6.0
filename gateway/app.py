@@ -27,9 +27,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Configurar rutas base
+BASE_DIR = Path(__file__).parent
+
 # Configurar archivos estáticos y templates
-app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")
+static_dir = BASE_DIR / "static"
+templates_dir = BASE_DIR / "templates"
+
+# Asegurar que los directorios existan
+static_dir.mkdir(exist_ok=True)
+templates_dir.mkdir(exist_ok=True)
+
+# Configurar archivos estáticos y templates
+app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
+templates = Jinja2Templates(directory=str(templates_dir))
 
 # URLs de microservicios
 SERVICES = {
