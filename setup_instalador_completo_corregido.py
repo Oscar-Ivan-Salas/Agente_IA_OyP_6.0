@@ -274,74 +274,74 @@ class AgenteIAGateway:
         self.app.mount("/static", StaticFiles(directory="gateway/static"), name="static")
         
     def setup_database(self):
-        """Configurar base de datos SQLite"""
-        try:
-            db_path = "databases/agente_ia.db"
-            os.makedirs(os.path.dirname(db_path), exist_ok=True)
-            
-            # Crear conexión y tablas
-            self.db_connection = sqlite3.connect(db_path, check_same_thread=False)
-            cursor = self.db_connection.cursor()
-            
-            # Tabla de datasets
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS datasets (
-                    id TEXT PRIMARY KEY,
-                    name TEXT,
-                    filename TEXT,
-                    file_type TEXT,
-                    upload_time TEXT,
-                    rows INTEGER,
-                    columns INTEGER,
-                    description TEXT,
-                    status TEXT,
-                    file_size INTEGER
-                )
-            ''')
-            
-            # Tabla de análisis
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS analysis_results (
-                    id TEXT PRIMARY KEY,
-                    dataset_id TEXT,
-                    analysis_type TEXT,
-                    results TEXT,
-                    charts TEXT,
-                    timestamp TEXT,
-                    status TEXT,
-                    processing_time REAL
-                )
-            ''')
-            
-            # Tabla de reportes
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS reports (
-                    id TEXT PRIMARY KEY,
-                    analysis_id TEXT,
-                    format TEXT,
-                    title TEXT,
-                    file_path TEXT,
-                    timestamp TEXT,
-                    status TEXT
-                )
-            ''')
-            
-            # Tabla de conversaciones de chat
-            cursor.execute('''
-                CREATE TABLE IF NOT EXISTS chat_conversations (
-                    id TEXT PRIMARY KEY,
-                    conversation_id TEXT,
-                    message TEXT,
-                    response TEXT,
-                    timestamp TEXT
-                )
-            ''')
-            
-            self.db_connection.commit()
-            logger.info("Base de datos configurada correctamente")
-            
-        except Exception as e:
-            logger.error(f"Error configurando base de datos: {e}")
+            """Configurar base de datos SQLite"""
+            try:
+                db_path = "databases/agente_ia.db"
+                os.makedirs(os.path.dirname(db_path), exist_ok=True)
+                
+                # Crear conexión y tablas
+                self.db_connection = sqlite3.connect(db_path, check_same_thread=False)
+                cursor = self.db_connection.cursor()
+                
+                # Tabla de datasets
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS datasets (
+                        id TEXT PRIMARY KEY,
+                        name TEXT,
+                        filename TEXT,
+                        file_type TEXT,
+                        upload_time TEXT,
+                        rows INTEGER,
+                        columns INTEGER,
+                        description TEXT,
+                        status TEXT,
+                        file_size INTEGER
+                    )
+                """)
+                
+                # Tabla de análisis
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS analysis_results (
+                        id TEXT PRIMARY KEY,
+                        dataset_id TEXT,
+                        analysis_type TEXT,
+                        results TEXT,
+                        charts TEXT,
+                        timestamp TEXT,
+                        status TEXT,
+                        processing_time REAL
+                    )
+                """)
+                
+                # Tabla de reportes
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS reports (
+                        id TEXT PRIMARY KEY,
+                        analysis_id TEXT,
+                        format TEXT,
+                        title TEXT,
+                        file_path TEXT,
+                        timestamp TEXT,
+                        status TEXT
+                    )
+                """)
+                
+                # Tabla de conversaciones de chat
+                cursor.execute("""
+                    CREATE TABLE IF NOT EXISTS chat_conversations (
+                        id TEXT PRIMARY KEY,
+                        conversation_id TEXT,
+                        message TEXT,
+                        response TEXT,
+                        timestamp TEXT
+                    )
+                """)
+                
+                self.db_connection.commit()
+                logger.info("Base de datos configurada correctamente")
+                
+            except Exception as e:
+                logger.error(f"Error configurando base de datos: {e}")
         
     def setup_routes(self):
         """Configurar todas las rutas del sistema"""
@@ -4740,9 +4740,3 @@ data/reports/*
 if __name__ == "__main__":
     installer = AgenteIACompleteInstaller()
     installer.install_complete_system()
-
-'''
-  }
-```
-
-No issues were found with the escaping in the provided string. The original string has been returned.
