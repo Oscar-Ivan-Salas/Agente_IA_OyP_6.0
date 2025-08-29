@@ -1,0 +1,2666 @@
+const response = await fetchWithAuth(API.document_upload(), {
+    method: 'POST',
+    body: formData
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error en el procesamiento: ${response.status} ${response.statusText}`);
+  }
+  
+  const result = await getJsonLenient(response);
+  const text = result?.text || result?.content || result?.extracted_text;
+  
+  if (text) {
+    extractedText.textContent = text;
+    showToast('Procesamiento completo', 'Texto extraído exitosamente con IA v6.0', 'success');
+    
+    // Opcional: copiar texto extraído al campo de IA
+    const iaTextInput = document.getElementById('ia-text-input');
+    if (iaTextInput && text.length < 2000) {
+      iaTextInput.value = text;
+    }
+  } else {
+    extractedText.textContent = 'No se pudo extraer texto del archivo o el archivo está vacío.';
+    showToast('Sin contenido', 'No se encontró texto en el archivo', 'warning');
+  }
+  
+} catch (error) {
+  console.error('Error processing document:', error);
+  extractedText.textContent = `Error al procesar el archivo: ${error.message}`;
+  showToast('Error de procesamiento', error.message, 'error');
+} finally {
+  uploadButton.disabled = false;
+  uploadButton.innerHTML = '<i class="ti ti-upload me-1"></i>Subir y Procesar';
+}
+});
+}
+
+// =====================
+// Sistema de navegación SPA v6.0
+// =====================
+function showSection(targetId) {
+// Ocultar todas las secciones
+document.querySelectorAll('.content-section').forEach(section => {
+section.classList.remove('active');
+});
+
+// Mostrar la sección objetivo
+const targetSection = document.getElementById(targetId);
+if (targetSection) {
+targetSection.classList.add('active');
+}
+
+// Actualizar navegación activa
+document.querySelectorAll('.nav-link[data-target]').forEach(link => {
+link.classList.remove('active');
+});
+
+const activeLink = document.querySelector(`.nav-link[data-target='${targetId}']`);
+if (activeLink) {
+activeLink.classList.add('active');
+}
+
+// Actualizar título de página
+const titleElement = activeLink ? activeLink.querySelector('.nav-link-title') : null;
+const pageTitle = document.getElementById('page-title');
+if (pageTitle && titleElement) {
+pageTitle.textContent = titleElement.textContent;
+}
+
+// Ejecutar lógica específica de cada sección
+switch (targetId) {
+case 'inicio':
+  loadDashboardData();
+  break;
+case 'analisis':
+  loadAnalisisData();
+  setupAnalyticsSection();
+  break;
+case 'ia':
+  setupIASection();
+  break;
+case 'reportes':
+  setupReportesSection();
+  break;
+case 'chat':
+  setupChatSection();
+  break;
+case 'documentos':
+  setupUploadSection();
+  break;
+case 'servicios':
+  loadServicesStatus();
+  break;
+}
+
+// Actualizar URL y guardar estado
+try {
+const urlParams = new URLSearchParams(location.search);
+urlParams.set('section', targetId);
+history.replaceState({}, '', `${location.pathname}?${urlParams.toString()}`);
+localStorage.setItem('last_section', targetId);
+} catch (e) {
+console.warn('No se pudo actualizar la URL:', e);
+}
+}
+
+// Exponer función de navegación globalmente
+window.showSection = showSection;
+
+// =====================
+// Sistema de Tests v6.0
+// =====================
+function runSmokeTests() {
+const testResults = document.getElementById('test-results');
+if (!testResults) return;
+
+testResults.innerHTML = '<div class="text-center"><div class="spinner-border spinner-border-sm" role="status"></div><span class="ms-2">Ejecutando tests v6.0...</span></div>';
+
+setTimeout(() => {
+const results = [];
+const addResult = (name, passed, details = '') => {
+  results.push({ name, passed, details });
+};
+
+try {
+  // Test 1: Validación de datos
+  const testData = validateResumen(MOCKS.resumen);
+  addResult('validateResumen() con datos válidos', 
+    testData.documentos.total === MOCKS.resumen.documentos.total && 
+    Array.isArray(testData.documentos.tipos));
+
+  // Test 2: WebSocket disponible
+  addResult('WebSocket inicializado', websocket !== null);
+  
+  // Test 3: WebSocket conectado
+  addResult('WebSocket conectado', wsConnected);
+
+  // Test 4: APIs v6.0 configuradas
+  const apisV6 = Object.values(API).every(fn => typeof fn === 'function');
+  addResult('APIs v6.0 configuradas', apisV6);
+
+  // Test 5: Elementos del DOM
+  const elementsExist = [
+    'total-documentos',
+    'documentos-semana', 
+    'precision-ia',
+    'conexiones-ws'
+  ].every(id => document.getElementById(id) !== null);
+  addResult('Elementos KPI en DOM', elementsExist);
+
+  // Test 6: Chart.js disponible
+  addResult('Chart.js cargado', typeof Chart !== 'undefined');
+
+  // Test 7: LocalStorage funcional
+  try {
+    localStorage.setItem('test-v6', 'value');
+    const testValue = localStorage.getItem('test-v6') === 'value';
+    localStorage.removeItem('test-v6');
+    addResult('LocalStorage funcional', testValue);
+  } catch (e) {
+    addResult('LocalStorage funcional', false, e.message);
+  }
+
+  // Test 8: Flags de configuración v6.0
+  addResult('FLAGS v6.0 inicializados', typeof FLAGS === 'object' && 'USE_MOCKS' in FLAGS);
+
+  // Test 9: Funciones de sección disponibles
+  const sectionsAvailable = ['setupIASection', 'setupChatSection', 'setupAnalyticsSection'].every(fn => 
+    typeof window[fn] === 'function' || typeof eval(fn) === 'function'
+  );
+  addResult('Funciones de sección disponibles', sectionsAvailable);
+
+  // Test 10: Instancias de gráficos
+  addResult('chartInstances inicializado', typeof chartInstances === 'object');
+
+  // Test 11: Servicios mock disponibles
+  addResult('Datos mock v6.0', Array.isArray(MOCKS.servicios) && MOCKS.servicios.length > 0);
+
+  // Test 12: WebSocket URL válida
+  addResult('WebSocket URL configurada', WS_URL.startsWith('ws://') || WS_URL.startsWith('wss://'));
+
+} catch (error) {
+  addResult('Ejecución de tests v6.0', false, error.message);
+}
+
+// Mostrar resultados
+const passed = results.filter(r => r.passed).length;
+const total = results.length;
+const percentage = Math.round((passed / total) * 100);
+
+let resultClass = 'success';
+if (percentage < 70) resultClass = 'danger';
+else if (percentage < 90) resultClass = 'warning';
+
+testResults.innerHTML = `
+  <div class="alert alert-${resultClass}">
+    <h4 class="alert-title">Resultados de Tests v6.0</h4>
+    <p class="mb-2">Pasaron ${passed} de ${total} tests (${percentage}%)</p>
+  </div>
+  <ul class="list-unstyled">
+    ${results.map(result => `
+      <li class="d-flex align-items-center mb-1">
+        <span class="test-badge ${result.passed ? 'pass' : 'fail'} me-2">
+          ${result.passed ? 'PASS' : 'FAIL'}
+        </span>
+        <span>${result.name}</span>
+        ${result.details ? `<small class="text-muted ms-2">— ${result.details}</small>` : ''}
+      </li>
+    `).join('')}
+  </ul>
+`;
+}, 1500);
+}
+
+// =====================
+// Función de actualización global
+// =====================
+function refreshData() {
+showToast('Actualizando', 'Refrescando todos los datos...', 'info');
+
+const currentSection = document.querySelector('.content-section.active')?.id;
+
+switch(currentSection) {
+case 'inicio':
+  loadDashboardData();
+  break;
+case 'analisis':
+  loadAnalisisData();
+  break;
+case 'servicios':
+  loadServicesStatus();
+  break;
+default:
+  loadDashboardData();
+}
+
+// Actualizar estado WebSocket
+if (!wsConnected) {
+initWebSocket();
+}
+}
+
+window.refreshData = refreshData;
+
+// =====================
+// Inicialización v6.0
+// =====================
+document.addEventListener('DOMContentLoaded', () => {
+console.log('🚀 Inicializando Agente IA OyP v6.0...');
+
+// Inicializar flags y configuración
+parseQueryFlags();
+addDevBanner();
+
+// Inicializar WebSocket
+initWebSocket();
+
+// Verificar token de autenticación
+token = localStorage.getItem('access_token') || '';
+const authStatus = document.getElementById('auth-status');
+if (!token) {
+FLAGS.USE_MOCKS = true;
+localStorage.setItem('USE_MOCKS', '1');
+if (authStatus) {
+  authStatus.textContent = 'Modo Demo';
+  authStatus.className = 'badge bg-warning-lt';
+}
+showToast('Modo Demo v6.0', 'Usando datos simulados - sin autenticación', 'info');
+} else {
+if (authStatus) {
+  authStatus.textContent = 'Autenticado';
+  authStatus.className = 'badge bg-success-lt';
+}
+}
+
+// Manejadores de errores globales
+window.addEventListener('error', (e) => {
+if (e?.message) {
+  console.error('Error global:', e);
+  showToast('Error de Script', e.message, 'error');
+}
+});
+
+window.addEventListener('unhandledrejection', (e) => {
+const message = (e && (e.reason?.message || e.reason)) || 'Error no controlado';
+console.error('Promesa rechazada:', e);
+showToast('Error no controlado', String(message), 'error');
+});
+
+// Configuración de mocks
+const toggleMocks = document.getElementById('toggle-mocks');
+if (toggleMocks) {
+toggleMocks.checked = FLAGS.USE_MOCKS;
+toggleMocks.addEventListener('change', () => {
+  FLAGS.USE_MOCKS = toggleMocks.checked;
+  localStorage.setItem('USE_MOCKS', FLAGS.USE_MOCKS ? '1' : '0');
+  showToast('Configuración', `Mocks ${FLAGS.USE_MOCKS ? 'activados' : 'desactivados'}`, 'info');
+  
+  // Actualizar banner
+  const banner = document.getElementById('dev-banner');
+  if (banner) banner.remove();
+  addDevBanner();
+});
+}
+
+// Botones de configuración
+const mockDashboardBtn = document.getElementById('btn-mock-dashboard');
+if (mockDashboardBtn) {
+mockDashboardBtn.addEventListener('click', () => {
+  FLAGS.USE_MOCKS = true;
+  localStorage.setItem('USE_MOCKS', '1');
+  loadDashboardData();
+});
+}
+
+const runTestsBtn = document.getElementById('btn-run-tests');
+if (runTestsBtn) {
+runTestsBtn.addEventListener('click', runSmokeTests);
+}
+
+const clearCacheBtn = document.getElementById('btn-clear-cache');
+if (clearCacheBtn) {
+clearCacheBtn.addEventListener('click', () => {
+  localStorage.removeItem('last_good_dashboard');
+  localStorage.removeItem('last_good_graficos');
+  showToast('Caché limpiado', 'Se eliminaron los datos en caché', 'success');
+});
+}
+
+const saveConfigBtn = document.getElementById('save-config');
+if (saveConfigBtn) {
+saveConfigBtn.addEventListener('click', () => {
+  const timeoutEl = document.getElementById('api-timeout');
+  const retriesEl = document.getElementById('retry-attempts');
+  const wsUrlEl = document.getElementById('websocket-url');
+  
+  // Validar que los elementos existen
+  if (!timeoutEl || !retriesEl || !wsUrlEl) {
+    showToast('Error', 'No se pudo cargar la configuración', 'error');
+    return;
+  }
+  
+  const timeout = timeoutEl.value;
+  const retries = retriesEl.value;
+  const wsUrl = wsUrlEl.value;
+  
+  FLAGS.API_TIMEOUT = parseInt(timeout) * 1000;
+  FLAGS.RETRY_ATTEMPTS = parseInt(retries);
+  
+  localStorage.setItem('API_TIMEOUT', timeout);
+  localStorage.setItem('RETRY_ATTEMPTS', retries);
+  localStorage.setItem('WEBSOCKET_URL', wsUrl);
+  
+  showToast('Configuración guardada', 'Los cambios se aplicaron correctamente', 'success');
+});
+}
+
+// Valores iniciales de configuración
+const apiTimeout = document.getElementById('api-timeout');
+const retryAttempts = document.getElementById('retry-attempts');
+const websocketUrl = document.getElementById('websocket-url');
+
+if (apiTimeout) apiTimeout.value = FLAGS.API_TIMEOUT / 1000;
+if (retryAttempts) retryAttempts.value = FLAGS.RETRY_ATTEMPTS;
+if (websocketUrl) websocketUrl.value = WS_URL;
+
+// Delegación de eventos para acciones generales
+document.addEventListener('click', (e) => {
+const target = e.target.closest('[data-action]');
+if (!target) return;
+
+const action = target.getAttribute('data-action');
+
+switch (action) {
+  case 'toggle-mocks':
+    e.preventDefault();
+    FLAGS.USE_MOCKS = !FLAGS.USE_MOCKS;
+    localStorage.setItem('USE_MOCKS', FLAGS.USE_MOCKS ? '1' : '0');
+    showToast('Mocks', `${FLAGS.USE_MOCKS ? 'Activados' : 'Desactivados'}`, 'info');
+    
+    const banner = document.getElementById('dev-banner');
+    if (banner) banner.remove();
+    addDevBanner();
+    break;
+    
+  case 'reconnect-ws':
+    e.preventDefault();
+    if (websocket) {
+      websocket.close();
+    }
+    setTimeout(initWebSocket, 1000);
+    showToast('WebSocket', 'Intentando reconectar...', 'info');
+    break;
+    
+  case 'close-banner':
+    e.preventDefault();
+    const closeBanner = document.getElementById('dev-banner');
+    if (closeBanner) closeBanner.remove();
+    break;
+}
+});
+
+// Navegación del sidebar
+document.querySelectorAll('.nav-link[data-target]').forEach(link => {
+link.addEventListener('click', (e) => {
+  e.preventDefault();
+  showSection(link.getAttribute('data-target'));
+});
+});
+
+// Quick actions en el header
+document.querySelectorAll('[data-go]').forEach(element => {
+element.addEventListener('click', (e) => {
+  e.preventDefault();
+  showSection(element.getAttribute('data-go'));
+});
+});
+
+// Selector de tema
+document.querySelectorAll('[data-theme]').forEach(themeLink => {
+themeLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  const theme = themeLink.getAttribute('data-theme');
+  
+  if (theme === 'system') {
+    document.documentElement.removeAttribute('data-bs-theme');
+    localStorage.removeItem('theme');
+  } else {
+    document.documentElement.setAttribute('data-bs-theme', theme);
+    localStorage.setItem('theme', theme);
+  }
+  
+  showToast('Tema cambiado', `Aplicado tema: ${themeLink.textContent}`, 'info');
+});
+});
+
+// Aplicar tema guardado
+const savedTheme = localStorage.getItem('theme');
+if (savedTheme) {
+document.documentElement.setAttribute('data-bs-theme', savedTheme);
+}
+
+// Navegación inicial
+const urlParams = new URLSearchParams(location.search);
+const initialSection = urlParams.get('section') || localStorage.getItem('last_section') || 'inicio';
+
+showSection(initialSection);
+
+// Mostrar notificación de bienvenida
+setTimeout(() => {
+showToast('¡Bienvenido!', 'Dashboard Agente IA OyP v6.0 cargado exitosamente', 'success');
+}, 1500);
+
+console.log('✅ Agente IA OyP v6.0 inicializado completamente');
+});
+
+// =====================
+// Gráficos con Chart.js v6.0
+// =====================
+function renderActividadChart(actividad) {
+const ctx = document.getElementById('actividad-chart');
+if (!ctx || typeof Chart === 'undefined') return;
+
+if (chartInstances.actividad) {
+chartInstances.actividad.destroy();
+}
+
+const labels = actividad.map(a => {
+const date = new Date(a.fecha);
+return date.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+});
+
+chartInstances.actividad = new Chart(ctx.getContext('2d'), {
+type: 'line',
+data: {
+  labels,
+  datasets: [
+    {
+      label: 'Documentos',
+      data: actividad.map(a => a.documentos),
+      borderColor: '#467fcf',
+      backgroundColor: 'rgba(70, 127, 207, 0.1)',
+      tension: 0.4,
+      fill: true
+    },
+    {
+      label: 'Proyectos',
+      data: actividad.map(a => a.proyectos),
+      borderColor: '#5eba00',
+      backgroundColor: 'rgba(94, 186, 0, 0.1)',
+      tension: 0.4,
+      fill: true
+    },
+    {
+      label: 'WebSocket',
+      data: actividad.map(a => a.websocket || 0),
+      borderColor: '#ff922b',
+      backgroundColor: 'rgba(255, 146, 43, 0.1)',
+      tension: 0.4,
+      fill: true
+    }
+  ]
+},
+options: {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'top'
+    }
+  },
+  scales: {
+    y: {
+      beginAtZero: true,
+      ticks: {
+        stepSize: 1
+      }
+    }
+  }
+}
+});
+}
+
+function renderDistribucionChart(distribucion) {
+const ctx = document.getElementById('distribucion-chart');
+if (!ctx || typeof Chart === 'undefined') return;
+
+if (chartInstances.distribucion) {
+chartInstances.distribucion.destroy();
+}
+
+chartInstances.distribucion = new Chart(ctx.getContext('2d'), {
+type: 'doughnut',
+data: {
+  labels: distribucion.map(d => d.name),
+  datasets: [{
+    data: distribucion.map(d => d.value),
+    backgroundColor: [
+      '#467fcf',
+      '#5eba00', 
+      '#ff922b',
+      '#e64980',
+      '#be4bdb',
+      '#6c757d'
+    ],
+    borderWidth: 2,
+    borderColor: '#fff'
+  }]
+},
+options: {
+  responsive: true,
+  maintainAspectRatio: false,
+  plugins: {
+    legend: {
+      position: 'right'
+    }
+  }
+}
+});
+}
+
+async function loadAnalisisData() {
+try {
+showLoadingState('analisis', true);
+
+if (FLAGS.USE_MOCKS) {
+  await new Promise(resolve => setTimeout(resolve, 400));
+  renderAnalisisCharts(MOCKS.graficos);
+  return;
+}
+
+// En v6.0, intentar obtener métricas del gateway
+const response = await fetchWithAuth(API.services_status());
+
+if (response.ok) {
+  const data = await getJsonLenient(response);
+  // Convertir datos del gateway a formato de gráficos
+  renderAnalisisCharts(MOCKS.graficos); // Por ahora usar mocks hasta implementar métricas
+} else {
+  throw new Error('No se pudieron cargar las métricas');
+}
+
+} catch (error) {
+console.error('Error loading analysis data:', error);
+renderAnalisisCharts(MOCKS.graficos);
+} finally {
+showLoadingState('analisis', false);
+}
+}
+
+function renderAnalisisCharts(data) {
+// Gráfico de recursos
+const recursosCtx = document.getElementById('recursos-chart');
+if (recursosCtx && typeof Chart !== 'undefined') {
+if (chartInstances.recursos) {
+  chartInstances.recursos.destroy();
+}
+
+chartInstances.recursos = new Chart(recursosCtx.getContext('2d'), {
+  type: 'line',
+  data: data.uso_recursos,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top'
+      }
+    },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+        ticks: {
+          callback: function(value) {
+            return value + '%';
+          }
+        }
+      }
+    }
+  }
+});
+}
+
+// Gráfico de almacenamiento
+const almacenamientoCtx = document.getElementById('almacenamiento-chart');
+if (almacenamientoCtx && typeof Chart !== 'undefined') {
+if (chartInstances.almacenamiento) {
+  chartInstances.almacenamiento.destroy();
+}
+
+chartInstances.almacenamiento = new Chart(almacenamientoCtx.getContext('2d'), {
+  type: 'pie',
+  data: data.distribucion_almacenamiento,
+  options: {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'bottom'
+      }
+    }
+  }
+});
+}
+}
+
+// =====================
+// IA y Análisis v6.0
+// =====================
+function setupIASection() {
+const analyzeButton = document.getElementById('ia-analyze-button');
+const textInput = document.getElementById('ia-text-input');
+const modelSelect = document.getElementById('ia-model-select');
+const resultContainer = document.getElementById('ia-result-container');
+const resultText = document.getElementById('ia-result-text');
+
+if (!analyzeButton) return;
+
+analyzeButton.onclick = async () => {
+const text = textInput.value.trim();
+const model = modelSelect.value;
+
+if (!text) {
+  showToast('Campo vacío', 'Por favor, introduce texto para analizar.', 'warning');
+  textInput.focus();
+  return;
+}
+
+analyzeButton.disabled = true;
+analyzeButton.innerHTML = '<i class="ti ti-loader ti-spin me-1"></i>Analizando...';
+
+try {
+  let result;
+  
+  if (FLAGS.USE_MOCKS) {
+    await new Promise(resolve => setTimeout(resolve, 1500));
+    result = {
+      analysis: `Análisis completado con modelo ${model} (simulado)`,
+      sentiment: 'positivo',
+      keywords: ['texto', 'análisis', 'IA', 'procesamiento'],
+      confidence: 0.97,
+      model_used: model,
+      summary: 'El texto proporcionado ha sido analizado exitosamente con técnicas avanzadas de IA v6.0.'
+    };
+  } else {
+    const response = await fetchWithAuth(API.ai_engine_analyze(), {
+      method: 'POST',
+      body: JSON.stringify({ text, model }),
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error en el análisis: HTTP ${response.status}`);
+    }
+    
+    result = await getJsonLenient(response);
+    if (!result) {
+      throw new Error('Respuesta no válida del servicio de IA');
+    }
+  }
+  
+  resultText.textContent = JSON.stringify(result, null, 2);
+  resultContainer.style.display = 'block';
+  showToast('Análisis completo', `Texto analizado con modelo ${model}`, 'success');
+  
+} catch (error) {
+  console.error('Error analyzing text:', error);
+  resultText.textContent = `Error: ${error.message}`;
+  resultContainer.style.display = 'block';
+  showToast('Error en análisis', error.message, 'error');
+} finally {
+  analyzeButton.disabled = false;
+  analyzeButton.innerHTML = '<i class="ti ti-brain me-1"></i>Analizar Texto';
+}
+};
+}
+
+// =====================
+// Analytics SPSS v6.0
+// =====================
+function setupAnalyticsSection() {
+const analyzeButton = document.getElementById('analyze-dataset-button');
+const fileInput = document.getElementById('dataset-file');
+const analysisType = document.getElementById('analysis-type');
+const resultsContainer = document.getElementById('analysis-results');
+
+if (!analyzeButton) return;
+
+analyzeButton.onclick = async () => {
+const file = fileInput.files[0];
+const type = analysisType.value;
+
+if (!file) {
+  showToast('Archivo requerido', 'Por favor, selecciona un dataset para analizar.', 'warning');
+  fileInput.focus();
+  return;
+}
+
+analyzeButton.disabled = true;
+analyzeButton.innerHTML = '<i class="ti ti-loader ti-spin me-1"></i>Analizando...';
+resultsContainer.innerHTML = '';
+
+try {
+  let result;
+  
+  if (FLAGS.USE_MOCKS) {
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    result = {
+      analysis_type: type,
+      filename: file.name,
+      summary: {
+        rows: 1250,
+        columns: 8,
+        missing_values: 23,
+        data_types: ['numeric', 'categorical', 'text']
+      },
+      results: generateMockAnalysisResults(type),
+      visualizations: [
+        { type: 'histogram', title: 'Distribución de variables' },
+        { type: 'correlation_matrix', title: 'Matriz de correlación' },
+        { type: 'scatter_plot', title: 'Gráfico de dispersión' }
+      ],
+      recommendations: [
+        'Los datos muestran una distribución normal',
+        'Se detectaron algunas correlaciones significativas',
+        'Recomendado: análisis de regresión adicional'
+      ]
+    };
+  } else {
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('analysis_type', type);
+    
+    const response = await fetchWithAuth(API.analytics_upload(), {
+      method: 'POST',
+      body: formData
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error en análisis SPSS: HTTP ${response.status}`);
+    }
+    
+    result = await getJsonLenient(response);
+    if (!result) {
+      throw new Error('Respuesta no válida del servicio de analytics');
+    }
+  }
+  
+  renderAnalysisResults(result);
+  showToast('Análisis SPSS completo', `Dataset ${file.name} analizado exitosamente`, 'success');
+  
+  // Enviar notificación por WebSocket
+  sendWSMessage({
+    type: 'analysis_complete',
+    analysis_type: type,
+    filename: file.name,
+    timestamp: new Date().toISOString()
+  });
+  
+} catch (error) {
+  console.error('Error in SPSS analysis:', error);
+  resultsContainer.innerHTML = `
+    <div class="alert alert-danger">
+      <h4 class="alert-title">Error en análisis</h4>
+      <p class="mb-0">${error.message}</p>
+    </div>
+  `;
+  showToast('Error en análisis SPSS', error.message, 'error');
+} finally {
+  analyzeButton.disabled = false;
+  analyzeButton.innerHTML = '<i class="ti ti-chart-line me-1"></i>Analizar Dataset';
+}
+};
+}
+
+function generateMockAnalysisResults(type) {
+switch(type) {
+case 'descriptive':
+  return {
+    mean: 45.7,
+    median: 42.3,
+    std_dev: 12.8,
+    min: 18.2,
+    max: 89.6,
+    quartiles: [32.1, 42.3, 58.9]
+  };
+case 'correlation':
+  return {
+    correlation_matrix: [
+      [1.0, 0.72, -0.35],
+      [0.72, 1.0, -0.28],
+      [-0.35, -0.28, 1.0]
+    ],
+    significant_correlations: ['Var1-Var2: 0.72 (p<0.001)']
+  };
+case 'regression':
+  return {
+    r_squared: 0.84,
+    coefficients: [2.34, -1.67, 0.92],
+    p_values: [0.001, 0.023, 0.156],
+    equation: 'Y = 2.34*X1 - 1.67*X2 + 0.92*X3'
+  };
+case 'clustering':
+  return {
+    n_clusters: 3,
+    silhouette_score: 0.68,
+    cluster_sizes: [423, 687, 140],
+    centroids: [[12.3, 45.7], [8.9, 32.1], [15.6, 51.2]]
+  };
+default:
+  return { message: 'Análisis completado exitosamente' };
+}
+}
+
+function renderAnalysisResults(result) {
+const container = document.getElementById('analysis-results');
+if (!container) return;
+
+container.innerHTML = `
+<div class="card">
+  <div class="card-header">
+    <h3 class="card-title">Resultados del Análisis: ${result.analysis_type}</h3>
+  </div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Resumen del Dataset</h5>
+        <ul class="list-unstyled">
+          <li><strong>Archivo:</strong> ${result.filename}</li>
+          <li><strong>Filas:</strong> ${result.summary?.rows || 'N/A'}</li>
+          <li><strong>Columnas:</strong> ${result.summary?.columns || 'N/A'}</li>
+          <li><strong>Valores faltantes:</strong> ${result.summary?.missing_values || 'N/A'}</li>
+        </ul>
+      </div>
+      <div class="col-md-6">
+        <h5>Resultados Estadísticos</h5>
+        <pre class="bg-light p-3 rounded">${JSON.stringify(result.results, null, 2)}</pre>
+      </div>
+    </div>
+    ${result.recommendations ? `
+      <div class="mt-3">
+        <h5>Recomendaciones</h5>
+        <ul>
+          ${result.recommendations.map(rec => `<li>${rec}</li>`).join('')}
+        </ul>
+      </div>
+    ` : ''}
+  </div>
+</div>
+`;
+}
+
+function handleAnalysisComplete(data) {
+showToast('Análisis completado', `${data.analysis_type} para ${data.filename} terminado`, 'success');
+}
+
+// =====================
+// Sistema de Chat v6.0 con WebSocket
+// =====================
+function setupChatSection() {
+const sendButton = document.getElementById('chat-send-button');
+const chatInput = document.getElementById('chat-input');
+const messagesContainer = document.getElementById('chat-messages');
+
+if (!sendButton) return;
+
+const addMessage = (message, sender, type = 'user') => {
+const messageDiv = document.createElement('div');
+messageDiv.className = `chat-message ${type}`;
+
+const timestamp = new Date().toLocaleTimeString();
+
+if (type === 'user') {
+  messageDiv.innerHTML = `<strong>Tú (${timestamp}):</strong> ${message}`;
+} else if (type === 'ai') {
+  messageDiv.innerHTML = `<strong>IA (${timestamp}):</strong> ${message}`;
+} else {
+  messageDiv.innerHTML = `<strong>Sistema (${timestamp}):</strong> ${message}`;
+}
+
+messagesContainer.appendChild(messageDiv);
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+};
+
+const handleSend = async () => {
+const message = chatInput.value.trim();
+if (!message) return;
+
+addMessage(message, 'Tú', 'user');
+chatInput.value = '';
+sendButton.disabled = true;
+sendButton.innerHTML = '<i class="ti ti-loader ti-spin me-1"></i>Enviando...';
+
+try {
+  if (wsConnected) {
+    // Usar WebSocket para tiempo real
+    sendWSMessage({
+      type: 'chat',
+      message: message,
+      timestamp: new Date().toISOString(),
+      session_id: 'dashboard-session'
+    });
+  } else {
+    // Fallback a API REST
+    let aiResponse;
+    
+    if (FLAGS.USE_MOCKS) {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      const responses = [
+        'Entiendo tu consulta. ¿Podrías proporcionar más detalles?',
+        'Según mi análisis v6.0, esto parece interesante. Te ayudo con gusto.',
+        'He procesado tu mensaje con IA avanzada. ¿En qué más puedo asistirte?',
+        'Perfecto, he analizado la información. ¿Necesitas algo más específico?',
+        'Basándome en mis algoritmos mejorados, puedo sugerir algunas opciones.'
+      ];
+      aiResponse = responses[Math.floor(Math.random() * responses.length)];
+    } else {
+      const response = await fetchWithAuth(API.chat_send(), {
+        method: 'POST',
+        body: JSON.stringify({ 
+          message: message, 
+          session_id: 'dashboard-session',
+          model: 'local'
+        }),
+        headers: { 'Accept': 'application/json' }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error en chat: HTTP ${response.status}`);
+      }
+      
+      const result = await getJsonLenient(response);
+      aiResponse = result?.response || result?.message || 'No he podido procesar tu mensaje correctamente.';
+    }
+    
+    addMessage(aiResponse, 'IA', 'ai');
+  }
+  
+} catch (error) {
+  console.error('Chat error:', error);
+  addMessage('Error al conectar con la IA. Por favor, intenta nuevamente.', 'Sistema', 'system');
+  showToast('Error de chat', error.message, 'error');
+} finally {
+  sendButton.disabled = false;
+  sendButton.innerHTML = '<i class="ti ti-send me-1"></i>Enviar';
+}
+};
+
+sendButton.onclick = handleSend;
+chatInput.onkeypress = (e) => {
+if (e.key === 'Enter' && !e.shiftKey) {
+  e.preventDefault();
+  handleSend();
+}
+};
+
+// Contador de caracteres actualizado
+chatInput.oninput = () => {
+const remaining = 1000 - chatInput.value.length;
+const counter = chatInput.parentNode.parentNode.querySelector('.form-text');
+if (counter) {
+  counter.textContent = `${remaining} caracteres restantes`;
+  counter.className = remaining < 100 ? 'form-text text-warning' : 'form-text text-muted';
+}
+};
+}
+
+function addChatMessage(type, message) {
+const messagesContainer = document.getElementById('chat-messages');
+if (!messagesContainer) return;
+
+const messageDiv = document.createElement('div');
+messageDiv.className = `chat-message ${type}`;
+
+const timestamp = new Date().toLocaleTimeString();
+messageDiv.innerHTML = `<strong>IA (${timestamp}):</strong> ${message}`;
+
+messagesContainer.appendChild(messageDiv);
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+
+// =====================
+// Reportes v6.0
+// =====================
+function setupReportesSection() {
+const generateButton = document.getElementById('generate-report-button');
+const contentInput = document.getElementById('report-content-input');
+const typeSelect = document.getElementById('report-type');
+const formatSelect = document.getElementById('report-format');
+const resultContainer = document.getElementById('report-result-container');
+
+if (!generateButton) return;
+
+generateButton.onclick = async () => {
+const content = contentInput.value.trim();
+const reportType = typeSelect.value;
+const format = formatSelect.value;
+
+if (!content) {
+  showToast('Campo vacío', 'Por favor, introduce contenido para el reporte.', 'warning');
+  contentInput.focus();
+  return;
+}
+
+generateButton.disabled = true;
+generateButton.innerHTML = '<i class="ti ti-loader ti-spin me-1"></i>Generando...';
+resultContainer.innerHTML = '';
+
+try {
+  let reportResult;
+  
+  if (FLAGS.USE_MOCKS) {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    reportResult = {
+      report_id: 'RPT-' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+      download_url: '#',
+      format: format,
+      size: '2.4 MB',
+      pages: 15
+    };
+  } else {
+    const response = await fetchWithAuth(API.report_generate(), {
+      method: 'POST',
+      body: JSON.stringify({ 
+        content, 
+        type: reportType, 
+        format: format,
+        metadata: {
+          generated_by: 'Agente IA v6.0',
+          timestamp: new Date().toISOString()
+        }
+      }),
+      headers: { 'Accept': 'application/json' }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Error al generar el reporte (HTTP ${response.status})`);
+    }
+    
+    reportResult = await getJsonLenient(response);
+  }
+  
+  const mockHandler = FLAGS.USE_MOCKS ? 
+    ' onclick="event.preventDefault(); showToast(\'Simulación\', \'Este es un enlace simulado\', \'info\')"' : '';
+  
+  resultContainer.innerHTML = `
+    <div class="alert alert-success">
+      <h4 class="alert-title">¡Reporte generado exitosamente!</h4>
+      <div class="mb-3">
+        <strong>ID:</strong> ${reportResult.report_id || 'N/A'}<br>
+        <strong>Tipo:</strong> ${typeSelect.options[typeSelect.selectedIndex].text}<br>
+        <strong>Formato:</strong> ${format.toUpperCase()}<br>
+        <strong>Tamaño:</strong> ${reportResult.size || 'Calculando...'}<br>
+        <strong>Páginas:</strong> ${reportResult.pages || 'N/A'}
+      </div>
+      <a href="${reportResult.download_url || '#'}" class="btn btn-success" download="reporte.${format}"${mockHandler}>
+        <i class="ti ti-download me-1"></i>Descargar ${format.toUpperCase()}
+      </a>
+    </div>
+  `;
+  
+  showToast('Reporte listo', `Reporte ${format.toUpperCase()} generado correctamente`, 'success');
+  
+} catch (error) {
+  console.error('Error generating report:', error);
+  resultContainer.innerHTML = `
+    <div class="alert alert-danger">
+      <h4 class="alert-title">Error al generar el reporte</h4>
+      <p class="mb-0">${error.message}</p>
+    </div>
+  `;
+  showToast('Error en reporte', error.message, 'error');
+} finally {
+  generateButton.disabled = false;
+  generateButton.innerHTML = '<i class="ti ti-file-download me-1"></i>Generar Reporte';
+}
+};
+}
+
+// =====================
+// Upload de documentos v6.0
+// =====================
+function setupUploadSection() {
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+const filePreview = document.getElementById('file-preview');
+const uploadButton = document.getElementById('upload-button');
+const extractedText = document.getElementById('extracted-text');
+
+if (!dropZone || !fileInput) return;
+
+let selectedFile = null;
+
+const clearPreview = () => {
+selectedFile = null;
+fileInput.value = '';
+filePreview.innerHTML = '';
+uploadButton.style.display = 'none';
+};
+
+const showFilePreview = (file) => {
+const fileSize = (file.size / 1024).toFixed(2);
+const fileType = file.type || 'Tipo desconocido';
+
+filePreview.innerHTML = `
+  <div class="alert alert-info d-flex justify-content-between align-items-start">
+    <div>
+      <strong>${file.name}</strong><br>
+      <small class="text-muted">Tamaño: ${fileSize} KB | Tipo: ${fileType}</small>
+    </div>
+    <button class="btn-close" id="remove-file" aria-label="Remover archivo"></button>
+  </div>
+`;
+
+uploadButton.style.display = 'block';
+
+const removeFileBtn = document.getElementById('remove-file');
+if (removeFileBtn) {
+  removeFileBtn.addEventListener('click', clearPreview);
+}
+};
+
+const validateFile = (file) => {
+const maxSize = 20 * 1024 * 1024; // 20MB en v6.0
+const allowedTypes = [
+  'application/pdf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'text/plain',
+  'image/jpeg',
+  'image/jpg',
+  'image/png',
+  'image/gif',
+  'image/webp'
+];
+
+if (file.size > maxSize) {
+  throw new Error('El archivo es demasiado grande. Máximo permitido: 20MB');
+}
+
+if (!allowedTypes.includes(file.type) && !file.name.match(/\.(pdf|docx|txt|jpg|jpeg|png|gif|webp)$/i)) {
+  throw new Error('Formato de archivo no soportado. Use: PDF, DOCX, TXT, JPG, PNG, GIF, WEBP');
+}
+
+return true;
+};
+
+// Event listeners para drag & drop
+dropZone.addEventListener('click', () => fileInput.click());
+
+fileInput.addEventListener('change', () => {
+if (fileInput.files.length > 0) {
+  const file = fileInput.files[0];
+  try {
+    validateFile(file);
+    selectedFile = file;
+    showFilePreview(selectedFile);
+  } catch (error) {
+    showToast('Archivo no válido', error.message, 'error');
+    clearPreview();
+  }
+}
+});
+
+dropZone.addEventListener('dragover', (e) => {
+e.preventDefault();
+dropZone.classList.add('dragover');
+});
+
+dropZone.addEventListener('dragleave', () => {
+dropZone.classList.remove('dragover');
+});
+
+dropZone.addEventListener('drop', (e) => {
+e.preventDefault();
+dropZone.classList.remove('dragover');
+
+if (e.dataTransfer.files.length > 0) {
+  const file = e.dataTransfer.files[0];
+  try {
+    validateFile(file);
+    selectedFile = file;
+    fileInput.files = e.dataTransfer.files;
+    showFilePreview(selectedFile);
+  } catch (error) {
+    showToast('Archivo no válido', error.message, 'error');
+    clearPreview();
+  }
+}
+});
+
+// Procesamiento de archivo v6.0
+uploadButton.addEventListener('click', async () => {
+if (!selectedFile) return;
+
+const formData = new FormData();
+formData.append('file', selectedFile);
+formData.append('options', JSON.stringify({
+  extract_text: true,
+  analyze_sentiment: true,
+  extract_entities: true,
+  version: '6.0'
+}));
+
+uploadButton.disabled = true;
+uploadButton.innerHTML = '<i class="ti ti-loader ti-spin me-1"></i>Procesando...';
+extractedText.textContent = 'Procesando archivo con IA v6.0, por favor espera...';
+
+try {
+  if (FLAGS.USE_MOCKS) {
+    await new Promise(resolve => setTimeout(resolve, 2500));
+    const mockTexts = [
+      'Este es un texto extraído de ejemplo del archivo PDF con IA v6.0.\n\nSentimiento: Positivo (85%)\nEntidades detectadas: [Empresa, Producto, Fecha]\nResumen: Documento analizado exitosamente.',
+      'Contenido del documento DOCX procesado con técnicas avanzadas v6.0.\n\nAnálisis de sentimiento: Neutral (72%)\nPalabras clave: tecnología, innovación, desarrollo\nConfianza: 94%',
+      'OCR completado con IA v6.0. Texto detectado: "Ejemplo de reconocimiento óptico de caracteres mejorado"\n\nCalidad de imagen: Alta\nPrecisión OCR: 97.3%\nIdioma detectado: Español'
+    ];
+    extractedText.textContent = mockTexts[Math.floor(Math.random() * mockTexts.length)];
+    showToast('Procesamiento completo', 'Archivo procesado exitosamente con IA v6.0', 'success');
+    
+    // Copiar al análisis de IA automáticamente
+    const iaTextInput = document.getElementById('ia-text-input');
+    if (iaTextInput) {
+      iaTextInput.value = extractedText.textContent.split('\n')[0]; // Solo el texto principal
+    }
+    
+    return;
+  }
+  
+  const response = await fetchWithAuth(API.document_upload(), {
+    method: 'POST',
+    body: formData
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error al subir el archivo: HTTP ${response.status}`);
+  }
+  
+  const result = await getJsonLenient(response);
+  if (!result) {
+    throw new Error('Respuesta no válida del servidor');
+  }
+  
+  extractedText.textContent = result.text || 'No se pudo extraer texto';
+  showToast('Procesamiento completo', 'Archivo procesado exitosamente con IA v6.0', 'success');
+  
+} catch (error) {
+  console.error('Error processing file:', error);
+  extractedText.textContent = `Error: ${error.message}`;
+  showToast('Error en procesamiento', error.message, 'error');
+} finally {
+  uploadButton.disabled = false;
+  uploadButton.innerHTML = '<i class="ti ti-upload me-1"></i>Subir Archivo';
+}
+};
+}
+
+// =====================
+// Estado global & Configuración - VERSIÓN 6.0
+// =====================
+let token = localStorage.getItem('access_token') || '';
+let websocket = null;
+let wsConnected = false;
+const chartInstances = { actividad: null, distribucion: null, recursos: null, almacenamiento: null };
+const FLAGS = { 
+  USE_MOCKS: localStorage.getItem('USE_MOCKS') === '1',
+  API_TIMEOUT: parseInt(localStorage.getItem('API_TIMEOUT')) || 10000,
+  RETRY_ATTEMPTS: parseInt(localStorage.getItem('RETRY_ATTEMPTS')) || 3,
+  WS_RECONNECT_ATTEMPTS: 0,
+  WS_MAX_RECONNECT_ATTEMPTS: 5,
+  WS_RECONNECT_DELAY: 1000, // 1 segundo inicial
+  WS_MAX_RECONNECT_DELAY: 30000 // 30 segundos máximo
+};
+
+// API endpoints configurables para v6.0
+const API_BASE_GATEWAY = 'http://localhost:8080';
+const WS_URL = localStorage.getItem('WEBSOCKET_URL') || 'ws://localhost:8080/ws';
+
+const API = {
+  // Gateway APIs
+  health: () => `${API_BASE_GATEWAY}/health`,
+  services_status: () => `${API_BASE_GATEWAY}/api/services/status`,
+
+  // Document Processor APIs
+  document_upload: () => `${API_BASE_GATEWAY}/api/services/document_processor/upload`,
+  document_process: (fileId) => `${API_BASE_GATEWAY}/api/services/document_processor/process/${fileId || ''}`,
+
+  // AI Engine APIs  
+  ai_engine_analyze: () => `${API_BASE_GATEWAY}/api/services/ai_engine/analyze_text`,
+  ai_engine_chat: () => `${API_BASE_GATEWAY}/api/services/ai_engine/chat`,
+  ai_engine_train: (modelId) => `${API_BASE_GATEWAY}/api/services/ai_engine/train/${modelId || ''}`,
+  
+  // Analytics Engine APIs
+  analytics_analyze: () => `${API_BASE_GATEWAY}/api/services/analytics_engine/analyze`,
+  analytics_upload: () => `${API_BASE_GATEWAY}/api/services/analytics_engine/upload_dataset`,
+  analytics_statistics: (datasetId) => `${API_BASE_GATEWAY}/api/services/analytics_engine/statistics/${datasetId || ''}`,
+  
+  // Report Generator APIs
+  report_generate: () => `${API_BASE_GATEWAY}/api/services/report_generator/generate`,
+  report_templates: () => `${API_BASE_GATEWAY}/api/services/report_generator/templates`,
+  report_download: (reportId) => `${API_BASE_GATEWAY}/api/services/report_generator/download/${reportId || ''}`,
+  
+  // Chat AI Service APIs
+  chat_send: () => `${API_BASE_GATEWAY}/api/services/chat_ai_service/send_message`,
+  chat_history: (sessionId) => `${API_BASE_GATEWAY}/api/services/chat_ai_service/history/${sessionId || 'current'}`,
+  chat_sessions: () => `${API_BASE_GATEWAY}/api/services/chat_ai_service/sessions`,
+  
+  // Authentication & User Management
+  auth_login: () => `${API_BASE_GATEWAY}/api/auth/login`,
+  auth_register: () => `${API_BASE_GATEWAY}/api/auth/register`,
+  auth_refresh: () => `${API_BASE_GATEWAY}/api/auth/refresh`,
+  user_profile: (userId) => `${API_BASE_GATEWAY}/api/users/${userId || 'me'}`,
+  
+  // System Management
+  system_metrics: () => `${API_BASE_GATEWAY}/api/system/metrics`,
+  system_logs: () => `${API_BASE_GATEWAY}/api/system/logs`,
+  system_backup: () => `${API_BASE_GATEWAY}/api/system/backup`,
+  
+  // Utils
+  utils_upload: () => `${API_BASE_GATEWAY}/api/utils/upload`,
+  utils_download: (fileId) => `${API_BASE_GATEWAY}/api/utils/download/${fileId || ''}`,
+  utils_convert: () => `${API_BASE_GATEWAY}/api/utils/convert`
+};
+
+// ======= Datos Mock mejorados para v6.0 =======
+const MOCKS = {
+resumen: {
+documentos: { 
+  total: 247, 
+  tipos: [
+    { nombre: 'PDF', cantidad: 89 },
+    { nombre: 'DOCX', cantidad: 67 },
+    { nombre: 'TXT', cantidad: 45 },
+    { nombre: 'Imágenes', cantidad: 32 },
+    { nombre: 'Otros', cantidad: 14 }
+  ]
+},
+proyectos: { activos: 12, completados: 38 },
+modelos_ia: { precision: 96.2, entrenados: 8, disponibles: 10 },
+conclusiones: [
+  'Sistema v6.0 funcionando de manera óptima',
+  'Incremento del 23% en documentos procesados vs v5.0',
+  'Precisión del modelo IA: 96.2% (excelente)',
+  'WebSocket funcionando correctamente en tiempo real',
+  'Microservicios todos operativos'
+],
+is_authenticated: true,
+message: 'Dashboard v6.0 cargado exitosamente'
+},
+servicios: [
+{ name: 'AI Engine', status: 'online', port: 8001 },
+{ name: 'Document Processor', status: 'online', port: 8002 },
+{ name: 'Analytics Engine', status: 'online', port: 8003 },
+{ name: 'Report Generator', status: 'online', port: 8004 },
+{ name: 'Chat AI Service', status: 'online', port: 8005 },
+{ name: 'API Gateway', status: 'online', port: 8080 }
+],
+graficos: {
+uso_recursos: {
+  labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+  datasets: [
+    { 
+      label: 'CPU %', 
+      data: [35, 52, 48, 65, 78, 55, 45],
+      borderColor: '#467fcf',
+      backgroundColor: 'rgba(70, 127, 207, 0.1)',
+      tension: 0.4
+    },
+    { 
+      label: 'RAM %', 
+      data: [45, 58, 62, 72, 80, 68, 55],
+      borderColor: '#5eba00',
+      backgroundColor: 'rgba(94, 186, 0, 0.1)',
+      tension: 0.4
+    },
+    { 
+      label: 'WebSocket Conn.', 
+      data: [2, 5, 8, 12, 15, 10, 6],
+      borderColor: '#ff922b',
+      backgroundColor: 'rgba(255, 146, 43, 0.1)',
+      tension: 0.4
+    }
+  ]
+},
+distribucion_almacenamiento: {
+  labels: ['Documentos', 'Modelos IA', 'Logs', 'Cache', 'WebSocket Data', 'Otros'],
+  datasets: [{
+    data: [40, 25, 15, 10, 5, 5],
+    backgroundColor: [
+      '#467fcf',
+      '#5eba00', 
+      '#ff922b',
+      '#e64980',
+      '#be4bdb',
+      '#6c757d'
+    ]
+  }]
+}
+}
+};
+
+// =====================
+// WebSocket Management - NUEVO EN V6.0
+// =====================
+function initWebSocket() {
+  // Si ya hay un intento de reconexión programado, no hacer nada
+  if (FLAGS.wsReconnectTimeout) {
+    return;
+  }
+
+  try {
+    // Cerrar conexión existente si la hay
+    if (websocket) {
+      websocket.onopen = null;
+      websocket.onclose = null;
+      websocket.onerror = null;
+      websocket.onmessage = null;
+      
+      try {
+        if (websocket.readyState === WebSocket.OPEN) {
+          websocket.close();
+        }
+      } catch (e) {
+        console.error('Error cerrando conexión WebSocket anterior:', e);
+      }
+    }
+
+    console.log(`Intentando conectar WebSocket (${FLAGS.WS_RECONNECT_ATTEMPTS + 1}/${FLAGS.WS_MAX_RECONNECT_ATTEMPTS})...`);
+    websocket = new WebSocket(WS_URL);
+
+    websocket.onopen = function(event) {
+      // Reiniciar contador de reconexiones al conectar exitosamente
+      FLAGS.WS_RECONNECT_ATTEMPTS = 0;
+      FLAGS.WS_RECONNECT_DELAY = 1000; // Resetear delay
+      wsConnected = true;
+      updateWSStatus('connected');
+      updateWSConnections(1);
+      showToast('WebSocket', 'Conectado en tiempo real', 'success');
+      
+      // Enviar mensaje de handshake
+      sendWSMessage({
+        type: 'handshake',
+        timestamp: new Date().toISOString(),
+        client: 'dashboard-v6',
+        version: '6.0'
+      });
+    };
+
+    websocket.onmessage = function(event) {
+      try {
+        const data = JSON.parse(event.data);
+        handleWebSocketMessage(data);
+      } catch (e) {
+        console.error('Error parsing WebSocket message:', e);
+      }
+    };
+
+    websocket.onclose = function(event) {
+      wsConnected = false;
+      updateWSStatus('disconnected');
+      updateWSConnections(0);
+      
+      // Solo intentar reconectar si no fue un cierre intencional (código 1000)
+      if (event.code !== 1000) {
+        const delay = Math.min(FLAGS.WS_RECONNECT_DELAY * Math.pow(2, FLAGS.WS_RECONNECT_ATTEMPTS), FLAGS.WS_MAX_RECONNECT_DELAY);
+        
+        if (FLAGS.WS_RECONNECT_ATTEMPTS < FLAGS.WS_MAX_RECONNECT_ATTEMPTS) {
+          FLAGS.WS_RECONNECT_ATTEMPTS++;
+          
+          showToast(
+            'WebSocket', 
+            `Conexión perdida. Reintentando en ${delay/1000} segundos (${FLAGS.WS_RECONNECT_ATTEMPTS}/${FLAGS.WS_MAX_RECONNECT_ATTEMPTS})...`, 
+            'warning'
+          );
+          
+          // Programar próximo intento con backoff exponencial
+          FLAGS.wsReconnectTimeout = setTimeout(() => {
+            FLAGS.wsReconnectTimeout = null;
+            initWebSocket();
+          }, delay);
+          
+          // Aumentar el delay para el próximo intento (con tope)
+          FLAGS.WS_RECONNECT_DELAY = Math.min(FLAGS.WS_RECONNECT_DELAY * 2, FLAGS.WS_MAX_RECONNECT_DELAY);
+        } else {
+          showToast(
+            'WebSocket', 
+            `No se pudo reconectar después de ${FLAGS.WS_MAX_RECONNECT_ATTEMPTS} intentos. Por favor, recarga la página.`, 
+            'error'
+          );
+        }
+      }
+    };
+
+    websocket.onerror = function(error) {
+      console.error('WebSocket error:', error);
+      updateWSStatus('error');
+      // No mostrar notificación de error aquí para no saturar al usuario
+      // El manejador de onclose se encargará de la reconexión
+    };
+
+  } catch (error) {
+    console.error('Error initializing WebSocket:', error);
+    updateWSStatus('error');
+    
+    // Manejar errores de inicialización
+    if (FLAGS.WS_RECONNECT_ATTEMPTS < FLAGS.WS_MAX_RECONNECT_ATTEMPTS) {
+      const delay = Math.min(FLAGS.WS_RECONNECT_DELAY * Math.pow(2, FLAGS.WS_RECONNECT_ATTEMPTS), FLAGS.WS_MAX_RECONNECT_DELAY);
+      FLAGS.WS_RECONNECT_ATTEMPTS++;
+      
+      console.log(`Reintentando conexión en ${delay}ms...`);
+      
+      FLAGS.wsReconnectTimeout = setTimeout(() => {
+        FLAGS.wsReconnectTimeout = null;
+        initWebSocket();
+      }, delay);
+      
+      // Aumentar el delay para el próximo intento
+      FLAGS.WS_RECONNECT_DELAY = Math.min(FLAGS.WS_RECONNECT_DELAY * 2, FLAGS.WS_MAX_RECONNECT_DELAY);
+    } else {
+      showToast(
+        'Error de conexión', 
+        'No se pudo establecer conexión con el servidor. Por favor, verifica tu conexión a internet.', 
+        'error'
+      );
+    }
+  }
+}
+
+function sendWSMessage(message) {
+if (websocket && wsConnected) {
+websocket.send(JSON.stringify(message));
+}
+}
+
+function handleWebSocketMessage(data) {
+switch(data.type) {
+case 'chat_response':
+  addChatMessage('ai', data.message);
+  break;
+  
+case 'service_status_update':
+  updateServicesStatus(data.data);
+  break;
+  
+case 'analysis_complete':
+  handleAnalysisComplete(data);
+  break;
+  
+case 'connection':
+  console.log('WebSocket handshake confirmed:', data);
+  break;
+  
+case 'error':
+  showToast('Error del servidor', data.message, 'error');
+  break;
+  
+default:
+  console.log('WebSocket message received:', data);
+}
+}
+
+function updateWSStatus(status) {
+const indicator = document.getElementById('ws-indicator');
+const chatStatus = document.getElementById('chat-status');
+
+if (indicator) {
+indicator.className = 'ws-status';
+if (status === 'connected') {
+  indicator.classList.add('connected');
+} else if (status === 'connecting') {
+  indicator.classList.add('connecting');
+}
+}
+
+if (chatStatus) {
+switch(status) {
+  case 'connected':
+    chatStatus.textContent = 'WebSocket Conectado';
+    chatStatus.className = 'badge bg-green-lt';
+    break;
+  case 'connecting':
+    chatStatus.textContent = 'Conectando...';
+    chatStatus.className = 'badge bg-yellow-lt';
+    break;
+  default:
+    chatStatus.textContent = 'Desconectado';
+    chatStatus.className = 'badge bg-red-lt';
+}
+}
+}
+
+function updateWSConnections(count) {
+const element = document.getElementById('conexiones-ws');
+if (element) {
+element.textContent = count;
+}
+}
+
+// =====================
+// Utilidades mejoradas para v6.0
+// =====================
+function addDevBanner() {
+const existing = document.getElementById('dev-banner');
+if (existing) existing.remove();
+
+const banner = document.createElement('div');
+banner.id = 'dev-banner';
+banner.className = 'dev-banner';
+banner.innerHTML = `
+<span><i class="ti ti-tools"></i> Modo Desarrollo v6.0: Mocks ${FLAGS.USE_MOCKS ? 'ACTIVOS' : 'INACTIVOS'} | WebSocket ${wsConnected ? 'CONECTADO' : 'DESCONECTADO'}</span>
+<button data-action="toggle-mocks">${FLAGS.USE_MOCKS ? 'Desactivar' : 'Activar'} Mocks</button>
+<button data-action="reconnect-ws">Reconectar WS</button>
+<button data-action="close-banner">×</button>
+`;
+banner.style.display = 'block';
+document.body.prepend(banner);
+}
+
+function showToast(title, message, type = 'info', timeoutMs = 5000) {
+const container = document.getElementById('alerts-container');
+if (!container) return;
+
+const id = 'alert-' + Math.random().toString(36).slice(2);
+const colorMap = { 
+success: 'alert-success', 
+info: 'alert-info', 
+warning: 'alert-warning', 
+error: 'alert-danger' 
+};
+const iconMap = { 
+success: 'ti-check', 
+info: 'ti-info-circle', 
+warning: 'ti-alert-triangle', 
+error: 'ti-alert-octagon' 
+};
+
+const cls = colorMap[type] || colorMap.info;
+const icon = iconMap[type] || iconMap.info;
+
+const el = document.createElement('div');
+el.className = `alert ${cls} alert-dismissible`;
+el.id = id;
+el.innerHTML = `
+<div class="d-flex">
+  <i class="ti ${icon} me-2"></i>
+  <div>
+    <h4 class="alert-title mb-1">${title}</h4>
+    <div>${message}</div>
+  </div>
+</div>
+<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+`;
+
+container.appendChild(el);
+
+if (timeoutMs) {
+setTimeout(() => {
+  if (el.parentNode) el.remove();
+}, timeoutMs);
+}
+}
+
+function parseQueryFlags() {
+const usp = new URLSearchParams(location.search);
+if (usp.get('mocks') === '1') {
+FLAGS.USE_MOCKS = true;
+localStorage.setItem('USE_MOCKS', '1');
+}
+}
+
+async function getJsonLenient(response) {
+const contentType = (response.headers.get('content-type') || '').toLowerCase();
+
+if (contentType.includes('application/json')) {
+try {
+  return await response.json();
+} catch (e) {
+  console.warn('Failed to parse JSON from application/json response:', e);
+}
+}
+
+try {
+const text = await response.text();
+if (!text.trim()) return null;
+
+try {
+  return JSON.parse(text);
+} catch (e) {
+  console.warn('Failed to parse response as JSON:', e);
+  return null;
+}
+} catch (e) {
+console.error('Failed to read response text:', e);
+return null;
+}
+}
+
+// =====================
+// Autenticación y Fetch mejorados para v6.0
+// =====================
+async function fetchWithAuth(url, options = {}) {
+const opts = { ...options };
+const headers = { 'Accept': 'application/json', ...(opts.headers || {}) };
+
+const isFormData = opts.body && typeof FormData !== 'undefined' && opts.body instanceof FormData;
+const method = (opts.method || 'GET').toUpperCase();
+
+if (!isFormData && method !== 'GET') {
+headers['Content-Type'] = headers['Content-Type'] || 'application/json';
+}
+
+if (token) {
+headers['Authorization'] = `Bearer ${token}`;
+}
+
+opts.headers = headers;
+opts.credentials = 'same-origin';
+
+// Configurar timeout
+const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), FLAGS.API_TIMEOUT);
+opts.signal = controller.signal;
+
+try {
+const response = await fetch(url, opts);
+clearTimeout(timeoutId);
+return response;
+} catch (err) {
+clearTimeout(timeoutId);
+if (err.name === 'AbortError') {
+  throw new Error('La solicitud tardó demasiado tiempo');
+}
+throw err;
+}
+}
+
+// =====================
+// Dashboard y visualización v6.0
+// =====================
+function renderDashboard(data) {
+try {
+const cleanedData = validateResumen(data);
+const tipos = cleanedData.documentos.tipos;
+
+// Actualizar KPIs
+const totalDocsEl = document.getElementById('total-documentos');
+const docsSemanaEl = document.getElementById('documentos-semana');
+const precisionIaEl = document.getElementById('precision-ia');
+
+if (totalDocsEl && docsSemanaEl && precisionIaEl) {
+  totalDocsEl.textContent = cleanedData.documentos.total;
+  
+  const documentosSemana = cleanedData.proyectos.activos + cleanedData.proyectos.completados;
+  docsSemanaEl.textContent = documentosSemana;
+  
+  let precisionTexto = 'Sin datos';
+  if (typeof cleanedData.modelos_ia?.precision === 'number') {
+    precisionTexto = `${cleanedData.modelos_ia.precision.toFixed(1)}%`;
+  }
+  precisionIaEl.textContent = precisionTexto;
+}
+
+// Generar datos de actividad semanal
+const hoy = new Date();
+const actividadSemanal = Array.from({ length: 7 }, (_, i) => {
+  const fecha = new Date(hoy);
+  fecha.setDate(hoy.getDate() - (6 - i));
+  return {
+    fecha: fecha.toISOString().split('T')[0],
+    documentos: Math.floor(Math.random() * 20) + 10,
+    proyectos: Math.floor(Math.random() * 10) + 5,
+    websocket: Math.floor(Math.random() * 15) + 3
+  };
+});
+renderActividadChart(actividadSemanal);
+
+// Renderizar distribución de documentos
+const distribucion = Array.isArray(tipos) && tipos.length > 0
+  ? tipos.map(t => ({ name: t.nombre, value: t.cantidad }))
+  : [{ name: 'Sin datos', value: 1 }];
+renderDistribucionChart(distribucion);
+
+// Actualizar conclusiones
+const conclusionesContainer = document.getElementById('conclusiones-container');
+if (conclusionesContainer) {
+  const conclusiones = Array.isArray(cleanedData.conclusiones) && cleanedData.conclusiones.length > 0
+    ? cleanedData.conclusiones
+    : [
+        'Sistema v6.0 funcionando correctamente',
+        `Total de documentos procesados: ${cleanedData.documentos.total}`,
+        `Precisión del modelo: ${precisionTexto}`,
+        `WebSocket: ${wsConnected ? 'Conectado' : 'Desconectado'}`,
+        'Sin alertas críticas'
+      ];
+  
+  conclusionesContainer.innerHTML = `
+    <ul class="list-group list-group-flush">
+      ${conclusiones.map(conclusion => `
+        <li class="list-group-item border-0 px-0">
+          <i class="ti ti-check text-success me-2"></i>${conclusion}
+        </li>
+      `).join('')}
+    </ul>
+  `;
+}
+
+loadServicesStatus();
+
+} catch (error) {
+console.error('Error en renderDashboard:', error);
+showToast('Error', `No se pudo renderizar el dashboard: ${error.message}`, 'error');
+}
+}
+
+async function loadDashboardData() {
+try {
+showLoadingState('inicio', true);
+
+if (FLAGS.USE_MOCKS) {
+  await new Promise(resolve => setTimeout(resolve, 500));
+  showToast('Modo Mock v6.0', 'Mostrando datos simulados', 'info');
+  renderDashboard(MOCKS.resumen);
+  return;
+}
+
+const response = await fetchWithAuth(API.health(), { 
+  method: 'GET',
+  cache: 'no-cache'
+});
+
+if (!response.ok) {
+  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
+
+const data = await getJsonLenient(response);
+if (!data) {
+  throw new Error('Respuesta vacía o no válida del servidor');
+}
+
+localStorage.setItem('last_good_dashboard', JSON.stringify(data));
+
+if (data?.message) {
+  showToast('Éxito', data.message, 'success');
+}
+
+renderDashboard(data);
+
+} catch (error) {
+console.error('loadDashboardData error:', error);
+
+const cached = localStorage.getItem('last_good_dashboard');
+if (cached) {
+  try {
+    showToast('Modo Offline', 'Mostrando datos en caché', 'warning');
+    renderDashboard(JSON.parse(cached));
+    return;
+  } catch (e) {
+    console.error('Error parsing cached data:', e);
+  }
+}
+
+showToast('Error de conexión', 'Mostrando datos simulados como respaldo', 'warning');
+renderDashboard(MOCKS.resumen);
+
+} finally {
+showLoadingState('inicio', false);
+}
+}
+
+function validateResumen(data) {
+const defaultData = {
+documentos: { total: 0, tipos: [] },
+proyectos: { activos: 0, completados: 0 },
+modelos_ia: { precision: 0 },
+is_authenticated: false,
+conclusiones: []
+};
+
+if (!data || typeof data !== 'object') return defaultData;
+
+const result = { ...defaultData, ...data };
+
+if (!result.documentos || typeof result.documentos !== 'object') {
+result.documentos = defaultData.documentos;
+}
+
+result.documentos.total = Number(result.documentos.total) || 0;
+
+if (!Array.isArray(result.documentos.tipos)) {
+result.documentos.tipos = [];
+}
+
+if (!result.proyectos || typeof result.proyectos !== 'object') {
+result.proyectos = defaultData.proyectos;
+}
+
+result.proyectos.activos = Number(result.proyectos.activos) || 0;
+result.proyectos.completados = Number(result.proyectos.completados) || 0;
+
+if (!result.modelos_ia || typeof result.modelos_ia !== 'object') {
+result.modelos_ia = defaultData.modelos_ia;
+}
+
+if (!Array.isArray(result.conclusiones)) {
+result.conclusiones = [];
+}
+
+return result;
+}
+
+function showLoadingState(sectionId, isLoading) {
+const section = document.getElementById(sectionId);
+if (!section) return;
+
+if (isLoading) {
+section.classList.add('loading');
+} else {
+section.classList.remove('loading');
+}
+}
+
+// =====================
+// Servicios v6.0
+// =====================
+async function loadServicesStatus() {
+const container = document.getElementById('servicios-container');
+if (!container) return;
+
+try {
+if (FLAGS.USE_MOCKS) {
+  await new Promise(resolve => setTimeout(resolve, 300));
+  renderServicesList(MOCKS.servicios, container);
+  updateServicesGrid(MOCKS.servicios);
+  return;
+}
+
+const response = await fetchWithAuth(API.services_status(), { method: 'GET' });
+
+if (!response.ok) {
+  throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+}
+
+const data = await getJsonLenient(response);
+
+// Adaptar formato si viene del nuevo gateway
+let services = [];
+if (data.services) {
+  services = Object.entries(data.services).map(([id, service]) => ({
+    name: service.service || id,
+    status: service.status === 'healthy' ? 'online' : 'offline',
+    port: service.port || 'N/A',
+    response_time: service.response_time_ms || null
+  }));
+} else if (Array.isArray(data)) {
+  services = data;
+}
+
+renderServicesList(services, container);
+updateServicesGrid(services);
+
+} catch (error) {
+console.error('Error loading services status:', error);
+container.innerHTML = `
+  <div class="alert alert-danger mb-0">
+    <div class="d-flex justify-content-between align-items-center">
+      <div>
+        <strong>Error al cargar servicios</strong>
+        <div class="text-muted small">${error.message}</div>
+      </div>
+      <button class="btn btn-sm btn-outline-secondary" onclick="loadServicesStatus()">
+        <i class="ti ti-refresh"></i>
+      </button>
+    </div>
+  </div>
+`;
+}
+}
+
+function renderServicesList(services, container) {
+if (!services || services.length === 0) {
+container.innerHTML = '<div class="alert alert-info mb-0">No hay servicios configurados</div>';
+return;
+}
+
+const ul = document.createElement('ul');
+ul.className = 'list-group list-group-flush';
+
+services.forEach(service => {
+const name = service.name || 'Servicio sin nombre';
+const status = (service.status || 'unknown').toLowerCase();
+
+let icon = 'ti-server';
+const lowerName = name.toLowerCase();
+if (lowerName.includes('ai')) icon = 'ti-brain';
+else if (lowerName.includes('document')) icon = 'ti-file-text';
+else if (lowerName.includes('analytics')) icon = 'ti-chart-line';
+else if (lowerName.includes('report')) icon = 'ti-report';
+else if (lowerName.includes('chat')) icon = 'ti-message-circle';
+else if (lowerName.includes('gateway')) icon = 'ti-router';
+
+let statusClass = 'bg-secondary';
+let statusText = 'Desconocido';
+let statusIcon = 'ti-help';
+
+switch (status) {
+  case 'online':
+    statusClass = 'bg-success';
+    statusText = 'En línea';
+    statusIcon = 'ti-check';
+    break;
+  case 'offline':
+    statusClass = 'bg-danger';
+    statusText = 'Fuera de línea';
+    statusIcon = 'ti-x';
+    break;
+  case 'warning':
+    statusClass = 'bg-warning';
+    statusText = 'Advertencia';
+    statusIcon = 'ti-alert-triangle';
+    break;
+}
+
+const li = document.createElement('li');
+li.className = 'list-group-item d-flex justify-content-between align-items-center border-0';
+li.innerHTML = `
+  <div class="d-flex align-items-center">
+    <i class="ti ${icon} me-2 text-muted"></i>
+    <span>${name}</span>
+    ${service.port ? `<small class="text-muted ms-2">:${service.port}</small>` : ''}
+  </div>
+  <span class="badge ${statusClass} d-flex align-items-center">
+    <i class="ti ${statusIcon} me-1" style="font-size: 0.75rem;"></i>
+    ${statusText}
+  </span>
+`;
+ul.appendChild(li);
+});
+
+container.innerHTML = '';
+container.appendChild(ul);
+}
+
+function updateServicesGrid(services) {
+const grid = document.getElementById('services-grid');
+if (!grid) return;
+
+grid.innerHTML = '';
+
+services.forEach(service => {
+const name = service.name || 'Servicio';
+const status = (service.status || 'unknown').toLowerCase();
+const isOnline = status === 'online';
+
+const col = document.createElement('div');
+col.className = 'col-md-6 col-lg-4 mb-3';
+
+col.innerHTML = `
+  <div class="card h-100">
+    <div class="card-body">
+      <div class="d-flex justify-content-between align-items-start mb-3">
+        <h4 class="card-title mb-0">${name}</h4>
+        <span class="badge ${isOnline ? 'bg-success' : 'bg-danger'}">
+          ${isOnline ? 'Online' : 'Offline'}
+        </span>
+      </div>
+      <div class="text-muted mb-2">
+        Puerto: ${service.port || 'N/A'}
+      </div>
+      ${service.response_time ? `
+        <div class="text-muted mb-2">
+          Tiempo respuesta: ${service.response_time}ms
+        </div>
+      ` : ''}
+      <div class="mt-auto">
+        <button class="btn btn-sm btn-outline-primary" onclick="testService('${service.name}')">
+          <i class="ti ti-test-pipe me-1"></i>Probar
+        </button>
+      </div>
+    </div>
+  </div>
+`;
+
+grid.appendChild(col);
+});
+}
+
+async function testService(serviceName) {
+try {
+showToast('Probando servicio', `Verificando ${serviceName}...`, 'info');
+
+if (FLAGS.USE_MOCKS) {
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  showToast('Test completado', `${serviceName}: Respondiendo correctamente`, 'success');
+  return;
+}
+
+const response = await fetchWithAuth(API.services_status());
+const data = await getJsonLenient(response);
+
+showToast('Test completado', `${serviceName}: Estado verificado`, 'success');
+
+} catch (error) {
+showToast('Test fallido', `${servic<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+<title>Dashboard - Agente IA OyP 6.0</title>
+
+<!-- Tabler 1.4 (CSS) -->
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-vendors.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" rel="stylesheet"/>
+
+<style>
+:root { --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; }
+.page-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+.page-body { flex-grow: 1; }
+.content-section { display: none; animation: fadeIn 0.35s ease; }
+.content-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Zona de carga de archivos */
+#drop-zone { border: 2px dashed var(--tblr-border-color); border-radius: 14px; padding: 40px; text-align: center; cursor: pointer; transition: background .25s ease, border-color .25s ease; background: rgba(0,0,0,.02); }
+#drop-zone.dragover { background: rgba(70,127,207,.08); border-color: #467fcf; }
+
+/* Charts */
+#actividad-chart, #distribucion-chart, #recursos-chart, #almacenamiento-chart { min-height: 280px; }
+
+/* High-end look */
+.kpi-card { position: relative; overflow: hidden; border: 1px solid var(--tblr-border-color); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.kpi-card::after { content:""; position:absolute; inset:-20%; background: radial-gradient(60% 60% at 80% -10%, rgba(70,127,207,.15), transparent 70%); pointer-events:none; }
+.kpi-icon { width:44px; height:44px; display:inline-grid; place-items:center; border-radius:12px; background: rgba(70,127,207,.08); }
+.glass { backdrop-filter: saturate(1.2) blur(8px); background: rgba(255,255,255,.6); border: 1px solid var(--tblr-border-color); }
+[data-bs-theme="dark"] .glass { background: rgba(0,0,0,.25); }
+.quick-actions .btn { border-radius: 999px; margin: 0 4px 8px 0; }
+
+/* Tests badges */
+.test-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; }
+.pass { background:#d3f9d8; color:#2b8a3e; }
+.fail { background:#ffe3e3; color:#c92a2a; }
+
+/* Dev banner */
+.dev-banner { 
+position: fixed; 
+top: 0; 
+left: 0; 
+right: 0; 
+z-index: 9999; 
+background: linear-gradient(45deg, #ff6b6b, #4ecdc4); 
+color: white; 
+text-align: center; 
+padding: 8px; 
+font-size: 12px; 
+box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.dev-banner button { 
+background: rgba(255,255,255,0.2); 
+border: none; 
+color: white; 
+padding: 2px 8px; 
+border-radius: 4px; 
+cursor: pointer; 
+margin-left: 8px; 
+}
+.dev-banner button:hover { background: rgba(255,255,255,0.3); }
+
+/* Loading states */
+.loading { opacity: 0.6; pointer-events: none; }
+.spinner-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Chat improvements */
+.chat-message { 
+margin-bottom: 10px; 
+padding: 8px 12px; 
+border-radius: 12px; 
+max-width: 80%; 
+}
+.chat-message.user { 
+background: #467fcf; 
+color: white; 
+margin-left: auto; 
+}
+.chat-message.ai { 
+background: #f8f9fa; 
+border: 1px solid #dee2e6; 
+}
+.chat-message.system { 
+background: #fff3cd; 
+border: 1px solid #ffeaa7; 
+color: #856404; 
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+.quick-actions .btn { font-size: 0.875rem; padding: 0.375rem 0.75rem; }
+.kpi-card .h1 { font-size: 1.5rem; }
+}
+
+/* WebSocket status indicator */
+.ws-status { 
+display: inline-block; 
+width: 8px; 
+height: 8px; 
+border-radius: 50%; 
+background: #dc3545; 
+margin-right: 6px; 
+animation: pulse 2s infinite; 
+}
+.ws-status.connected { background: #28a745; }
+.ws-status.connecting { background: #ffc107; }
+</style>
+</head>
+<body>
+<div id="dev-banner" class="dev-banner" style="display: none;"></div>
+
+<div class="page">
+<!-- Sidebar -->
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+<div class="container-fluid">
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <h1 class="navbar-brand navbar-brand-autodark">
+    <a href=".">
+      🤖 AGENTE IA OyP 6.0
+      <span class="ws-status" id="ws-indicator" title="Estado WebSocket"></span>
+    </a>
+  </h1>
+  <div class="collapse navbar-collapse" id="sidebar-menu">
+    <ul class="navbar-nav pt-lg-3">
+      <li class="nav-item"><a class="nav-link active" href="#" data-target="inicio"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-home"></i></span><span class="nav-link-title">Dashboard Principal</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="documentos"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-file-text"></i></span><span class="nav-link-title">Gestión de Documentos</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="ia"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-brain"></i></span><span class="nav-link-title">IA (Análisis y Predicción)</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="chat"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-message-circle"></i></span><span class="nav-link-title">Chat con IA en Tiempo Real</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="analisis"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-chart-bar"></i></span><span class="nav-link-title">Analytics SPSS</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="reportes"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-report"></i></span><span class="nav-link-title">Generación de Reportes</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="servicios"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-server"></i></span><span class="nav-link-title">Gestión de Servicios</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="configuracion"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-settings"></i></span><span class="nav-link-title">Configuración</span></a></li>
+    </ul>
+  </div>
+</div>
+</aside>
+
+<!-- Page Content -->
+<div class="page-wrapper">
+<div class="page-header d-print-none">
+  <div class="container-xl">
+    <div class="row g-3 align-items-center">
+      <div class="col">
+        <div class="d-flex align-items-center gap-2">
+          <h2 class="page-title mb-0" id="page-title">Dashboard Principal</h2>
+          <span class="badge bg-primary-lt">v6.0</span>
+          <span class="badge bg-success-lt" id="auth-status">Conectado</span>
+        </div>
+      </div>
+      <div class="col-auto ms-auto d-print-none">
+        <div class="d-flex gap-2">
+          <div class="dropdown">
+            <a href="#" class="btn btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Cambiar tema"><i class="ti ti-sun-high"></i></a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" data-theme="light">Claro</a>
+              <a class="dropdown-item" href="#" data-theme="dark">Oscuro</a>
+              <a class="dropdown-item" href="#" data-theme="system">Sistema</a>
+            </div>
+          </div>
+          <button class="btn btn-outline-primary" onclick="refreshData()">
+            <i class="ti ti-refresh me-1"></i>Actualizar
+          </button>
+          <a href="#" class="btn btn-primary" data-go="documentos"><i class="ti ti-plus me-1"></i> Nuevo</a>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-3 quick-actions">
+      <div class="col">
+        <div class="btn-list">
+          <a class="btn btn-outline-primary" href="#" data-go="documentos"><i class="ti ti-upload me-1"></i>Subir archivo</a>
+          <a class="btn btn-outline-success" href="#" data-go="ia"><i class="ti ti-brain me-1"></i>Análisis IA</a>
+          <a class="btn btn-outline-warning" href="#" data-go="analisis"><i class="ti ti-chart-line me-1"></i>Analytics SPSS</a>
+          <a class="btn btn-outline-info" href="#" data-go="chat"><i class="ti ti-message-circle me-1"></i>Chat IA</a>
+          <a class="btn btn-outline-secondary" href="#" data-go="reportes"><i class="ti ti-file-analytics me-1"></i>Generar reporte</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <div class="container-xl">
+    <div id="alerts-container" class="mb-3"></div>
+
+    <!-- SECCIÓN INICIO -->
+    <div id="inicio" class="content-section active">
+      <div class="row row-deck row-cards">
+        <!-- KPIs -->
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Documentos Totales</div>
+                <div class="kpi-icon"><i class="ti ti-files"></i></div>
+              </div>
+              <div class="h1 mb-0" id="total-documentos">Cargando...</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Procesados (Semana)</div>
+                <div class="kpi-icon"><i class="ti ti-calendar-stats"></i></div>
+              </div>
+              <div class="h1 mb-0" id="documentos-semana">Cargando...</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Precisión del Modelo IA</div>
+                <div class="kpi-icon"><i class="ti ti-target"></i></div>
+              </div>
+              <div class="h1 mb-0" id="precision-ia">Cargando...</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Conexiones WebSocket</div>
+                <div class="kpi-icon"><i class="ti ti-wifi"></i></div>
+              </div>
+              <div class="h1 mb-0" id="conexiones-ws">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="col-lg-7">
+          <div class="card glass">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">Actividad de la Última Semana</h3>
+                <span class="badge bg-blue-lt">7 días</span>
+              </div>
+              <div style="height:300px; position: relative;">
+                <canvas id="actividad-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card glass">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">Distribución de Documentos</h3>
+                <i class="ti ti-chart-donut"></i>
+              </div>
+              <div style="height:300px; position: relative;">
+                <canvas id="distribucion-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conclusiones y Estado de Servicios -->
+        <div class="col-md-6">
+          <div class="card glass h-100">
+            <div class="card-header">
+              <h3 class="card-title">Conclusiones Automáticas</h3>
+            </div>
+            <div class="card-body" id="conclusiones-container">
+              <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card glass h-100">
+            <div class="card-header">
+              <h3 class="card-title">Estado de los Servicios</h3>
+            </div>
+            <div class="card-body" id="servicios-container">
+              <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DOCUMENTOS -->
+    <div id="documentos" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Cargar Nuevo Documento</h3>
+        </div>
+        <div class="card-body">
+          <div id="drop-zone">
+            <i class="ti ti-cloud-upload" style="font-size: 48px; color: #467fcf;"></i>
+            <p class="mt-2 mb-1">Arrastra y suelta un archivo aquí o haz clic para seleccionar</p>
+            <small class="text-muted">Formatos soportados: PDF, DOCX, TXT, imágenes</small>
+            <input type="file" id="file-input" style="display: none;" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png">
+          </div>
+          <div id="file-preview" class="mt-3"></div>
+          <div class="mt-3">
+            <button id="upload-button" class="btn btn-primary" style="display: none;">
+              <i class="ti ti-upload me-1"></i>Subir y Procesar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-4">
+        <div class="card-header">
+          <h3 class="card-title">Texto Extraído</h3>
+        </div>
+        <div class="card-body">
+          <pre id="extracted-text" class="bg-light p-3 rounded" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">El resultado del procesamiento aparecerá aquí.</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN IA -->
+    <div id="ia" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Análisis de Texto con IA</h3>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="ia-text-input" class="form-label">Texto a analizar</label>
+            <textarea id="ia-text-input" class="form-control" rows="6" placeholder="Pega o escribe aquí el texto que quieres que la IA analice..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="ia-model-select" class="form-label">Modelo de IA</label>
+            <select id="ia-model-select" class="form-select">
+              <option value="local">Modelo Local (Offline)</option>
+              <option value="openai">OpenAI GPT-4</option>
+              <option value="anthropic">Anthropic Claude</option>
+              <option value="google">Google Gemini</option>
+            </select>
+          </div>
+          <button id="ia-analyze-button" class="btn btn-primary">
+            <i class="ti ti-brain me-1"></i>Analizar Texto
+          </button>
+          <div id="ia-result-container" class="mt-4" style="display: none;">
+            <h4>Resultado del Análisis:</h4>
+            <div class="card">
+              <div class="card-body">
+                <pre id="ia-result-text" class="mb-0" style="white-space: pre-wrap;"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CHAT -->
+    <div id="chat" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h3 class="card-title">Chat con IA en Tiempo Real</h3>
+            <span class="badge bg-green-lt" id="chat-status">WebSocket Conectado</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="chat-messages" class="mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; background: #f8f9fa;">
+            <div class="chat-message system">
+              <strong>Sistema:</strong> ¡Hola! Soy tu asistente de IA conectado en tiempo real. ¿En qué puedo ayudarte?
+            </div>
+          </div>
+          <div class="input-group">
+            <input type="text" id="chat-input" class="form-control" placeholder="Escribe tu mensaje..." maxlength="1000">
+            <button id="chat-send-button" class="btn btn-primary">
+              <i class="ti ti-send me-1"></i>Enviar
+            </button>
+          </div>
+          <small class="form-text text-muted">Máximo 1000 caracteres por mensaje</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN ANALYTICS SPSS -->
+    <div id="analisis" class="content-section">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3 class="card-title">Analytics SPSS - Análisis Estadístico</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="dataset-file" class="form-label">Subir Dataset</label>
+                <input type="file" id="dataset-file" class="form-control" accept=".csv,.xlsx,.json">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="analysis-type" class="form-label">Tipo de Análisis</label>
+                <select id="analysis-type" class="form-select">
+                  <option value="descriptive">Estadísticas Descriptivas</option>
+                  <option value="correlation">Análisis de Correlación</option>
+                  <option value="regression">Regresión Lineal</option>
+                  <option value="clustering">Clustering K-means</option>
+                  <option value="anova">ANOVA</option>
+                  <option value="chi_square">Chi-cuadrado</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button id="analyze-dataset-button" class="btn btn-primary">
+            <i class="ti ti-chart-line me-1"></i>Analizar Dataset
+          </button>
+          <div id="analysis-results" class="mt-4"></div>
+        </div>
+      </div>
+      
+      <div class="row row-deck row-cards">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Uso de Recursos del Sistema</h3>
+              <div style="position: relative; height: 300px;">
+                <canvas id="recursos-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Distribución de Almacenamiento</h3>
+              <div style="position: relative; height: 300px;">
+                <canvas id="almacenamiento-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN REPORTES -->
+    <div id="reportes" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Generación de Reportes</h3>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="report-type" class="form-label">Tipo de Reporte</label>
+            <select id="report-type" class="form-select">
+              <option value="general">Reporte General</option>
+              <option value="documentos">Análisis de Documentos</option>
+              <option value="ia">Rendimiento de IA</option>
+              <option value="recursos">Uso de Recursos</option>
+              <option value="analytics">Analytics SPSS</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="report-format" class="form-label">Formato de Salida</label>
+            <select id="report-format" class="form-select">
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+              <option value="html">HTML</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="report-content-input" class="form-label">Contenido del Reporte</label>
+            <textarea id="report-content-input" class="form-control" rows="10" placeholder="Escribe el contenido que deseas incluir en el reporte..."></textarea>
+          </div>
+          <button id="generate-report-button" class="btn btn-primary">
+            <i class="ti ti-file-download me-1"></i>Generar Reporte
+          </button>
+          <div id="report-result-container" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN SERVICIOS -->
+    <div id="servicios" class="content-section">
+      <div class="row row-deck row-cards">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Estado de Microservicios</h3>
+              <div class="card-actions">
+                <button class="btn btn-primary" onclick="refreshServicesStatus()">
+                  <i class="ti ti-refresh me-1"></i>Actualizar
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="services-grid" class="row"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CONFIGURACIÓN -->
+    <div id="configuracion" class="content-section">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Depuración y Mocks</h3>
+            </div>
+            <div class="card-body">
+              <div class="mb-2">Activar Mocks cuando el backend no responda o para pruebas locales.</div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="toggle-mocks">
+                <label class="form-check-label" for="toggle-mocks">Usar datos Mock</label>
+              </div>
+              <div class="d-flex gap-2
