@@ -2,7 +2,7 @@
 Esquemas para la gestión de tareas.
 """
 from datetime import datetime
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from enum import Enum
 from pydantic import Field, validator, root_validator
 from .base import BaseSchema, TimestampMixin, IDMixin
@@ -38,7 +38,7 @@ class TaskBase(BaseSchema):
     due_date: Optional[datetime] = Field(None, description="Fecha de vencimiento")
     completed_at: Optional[datetime] = Field(None, description="Fecha de finalización")
 
-    @root_validator
+    @root_validator(pre=True, skip_on_failure=True)
     def validate_dates(cls, values):
         """Valida que la fecha de inicio sea anterior a la de vencimiento."""
         start_date = values.get('start_date')
@@ -99,9 +99,4 @@ class TaskWithRelations(TaskResponse):
     parent: Optional["TaskResponse"] = Field(None, description="Tarea padre")
     subtasks: List["TaskResponse"] = Field(default_factory=list, description="Subtareas")
 
-# Resolver referencias circulares
-def _resolve_forward_refs():
-    from .project import ProjectResponse
-    TaskWithRelations.update_forward_refs(ProjectResponse=ProjectResponse, TaskResponse=TaskResponse)
-
-_resolve_forward_refs()
+# Las referencias circulares se resuelven en schemas/__init__.py

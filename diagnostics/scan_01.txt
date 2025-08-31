@@ -1,0 +1,63 @@
+# INFORME DE AUDITORÍA INICIAL (VC-01)
+# Fecha: 2025-08-29
+# Hora: 10:19
+
+## ESTRUCTURA DEL PROYECTO
+
+### Directorios principales:
+- configs/ - Archivos de configuración
+- data/ - Datos de la aplicación
+- db/ - Configuración de base de datos
+- diagnostics/ - Archivos de diagnóstico
+- docker/ - Configuración de Docker
+- docs/ - Documentación
+- gateway/ - Código fuente principal
+- logs/ - Archivos de registro
+- scripts/ - Scripts de utilidad
+- services/ - Servicios adicionales
+- templates/ - Plantillas HTML
+- tests/ - Pruebas unitarias
+- venv/ - Entorno virtual
+
+### Archivos HTML identificados:
+- gateway/templates/index.html - Archivo principal
+- gateway/templates/index_new.html - Posible duplicado que necesita revisión
+
+### Entornos virtuales encontrados:
+- venv/ - Entorno virtual principal
+- (No se encontraron entornos duplicados)
+
+## POSIBLES PROBLEMAS IDENTIFICADOS
+
+1. **Archivos HTML duplicados**:
+   - `index.html` e `index_new.html` en la carpeta templates
+
+2. **Estructura de paquetes**:
+   - Se debe verificar la estructura de paquetes en gateway/
+
+3. **Dependencias**:
+   - Se debe verificar la consistencia de las dependencias en requirements.txt
+
+## PLAN DE ACCIÓN
+
+1. **VC-02 (Cuarentena de duplicados)**:
+   - Mover `index_new.html` a cuarentena
+   - Documentar cambios
+
+2. **VC-03 (Verificar paquete gateway)**:
+   - Verificar estructura de paquetes
+   - Crear archivos __init__.py faltantes
+
+3. **VC-04 (Normalizar entorno)**:
+   - Verificar configuración de Python
+   - Asegurar uso de .venv
+
+4. **VC-05 (Alinear dependencias)**:
+   - Actualizar dependencias a versiones específicas
+   - Documentar versiones
+
+## PRÓXIMOS PASOS
+
+1. Ejecutar VC-02 para limpiar duplicados
+2. Verificar estructura de paquetes (VC-03)
+3. Normalizar entorno de desarrollo (VC-04)

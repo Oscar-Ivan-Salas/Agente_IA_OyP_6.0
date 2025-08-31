@@ -1,0 +1,103 @@
+=== Environment Test ===
+
+Python Executable: C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\python.exe
+Python Version: 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+Working Directory: C:\Users\USUARIO\Agente_IA_OyP_6.0
+
+Pydantic is installed!
+Version: 1.10.13
+Location: C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\__init__.py
+Error importing pydantic._internal: cannot import name '_internal' from 'pydantic' (C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\__init__.py)
+
+=== Site Packages ===
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\win32
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\win32\lib
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\Pythonwin
+
+=== Current Directory Contents ===
+- .env
+- .env.example
+- .git
+- .gitignore
+- .pytest_cache
+- .venv
+- .venv_clean
+- .vscode
+- 2.0.0
+- activate_env.bat
+- alembic.ini
+- AUDIT.md
+- CHANGELOG.md
+- CHANGE_POLICY.md
+- check_env.py
+- check_environment.py
+- check_imports.py
+- check_python.py
+- configs
+- data
+- db
+- diagnostics
+- docker
+- docs
+- env_test.py
+- env_test_output.txt
+- EXEC_PLAN.md
+- GAP_ANALYSIS.md
+- gateway
+- gateway.log
+- iniciar_servicios.ps1
+- init_db.py
+- install_all_services.py
+- logs
+- manage.py
+- pyproject.toml
+- pytest.ini
+- QUICK_START.md
+- README.md
+- reinstall_pydantic.py
+- requirements-dev.txt
+- requirements-updated.txt
+- requirements.lock.txt
+- requirements.txt
+- RISK_REPORT.md
+- run_tests.py
+- scripts
+- services
+- service_manager.py
+- setup.py
+- setup_ai_engine_v6.py
+- setup_analytics_engine.py
+- setup_and_test.bat
+- setup_continuation.py
+- setup_directory_structure.py
+- setup_document_processor.py
+- setup_gateway_structure.py
+- setup_instalador_completo.txt
+- setup_instalador_completo_corregido.py
+- setup_instalador_maestro.py
+- setup_report_generator.py
+- setup_update_ai_engine.py
+- simple_import_test.py
+- simple_test.py
+- sitecustomize.py
+- startup.log
+- start_gateway.py
+- start_system.py
+- templates
+- tests
+- test_config.py
+- test_connection.py
+- test_env.py
+- test_fastapi.py
+- test_import.py
+- test_pyd.py
+- test_pydantic.py
+- test_runner.py
+- test_server.py
+- test_websocket.py
+- venv
+- verify_setup.py
+- _vibe_quarantine
+- __init__.py
+- __pycache__

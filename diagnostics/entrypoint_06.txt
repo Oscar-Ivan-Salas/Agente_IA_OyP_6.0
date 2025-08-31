@@ -1,0 +1,31 @@
+# INFORME DE PUNTO DE ENTRADA (VC-06)
+# Fecha: 2025-08-29
+# Hora: 10:26
+
+## ANÁLISIS DE PUNTOS DE ENTRADA
+
+### Archivos identificados:
+1. `gateway/main.py` - Punto de entrada principal (recomendado)
+   - Define `app = FastAPI()`
+   - Tiene configuración de ciclo de vida
+   - Incluye routers y middlewares
+
+2. `gateway/app.py` - Archivo duplicado (posiblemente obsoleto)
+   - También define una aplicación FastAPI
+   - Contiene lógica similar pero con implementación diferente
+   - Tiene código de WebSocket y proxy
+
+3. `gateway/simple_app.py` - Archivo de prueba/ejemplo
+   - No se recomienda como punto de entrada
+
+## RECOMENDACIONES
+
+1. **Estandarizar en `gateway/main.py`** como punto de entrada único.
+2. **Mover a cuarentena** `gateway/app.py` y `gateway/simple_app.py` después de asegurar que toda la funcionalidad necesaria esté en `main.py`.
+3. **Actualizar documentación** para que todos los desarrolladores usen `gateway/main:app`.
+
+## PRÓXIMOS PASOS
+
+1. Mover archivos duplicados a cuarentena (VC-02).
+2. Verificar que toda la funcionalidad de `app.py` esté en `main.py`.
+3. Continuar con VC-07 (Servir index.html original).

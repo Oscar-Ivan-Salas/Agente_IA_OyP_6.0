@@ -13,7 +13,13 @@ class BaseSchema(BaseModel):
     class Config:
         orm_mode = True
         json_encoders = {
-            datetime: lambda v: v.isoformat(),
+            datetime: lambda v: v.isoformat() if v else None,
+            UUID: str
+        }
+        
+        # Configuración para manejo de tipos opcionales
+        json_encoders = {
+            datetime: lambda v: v.isoformat() if v else None,
             UUID: str
         }
 

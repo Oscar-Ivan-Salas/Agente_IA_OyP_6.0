@@ -25,7 +25,7 @@ from fastapi.routing import APIRouter
 import uvicorn
 
 # Importar routers
-from gateway.routes import dashboard as dashboard_routes
+from .routes import dashboard as dashboard_routes
 
 # =====================
 # CONFIGURACIÓN GLOBAL

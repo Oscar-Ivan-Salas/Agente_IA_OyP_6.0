@@ -4,13 +4,17 @@ Gateway principal de la aplicación.
 Este módulo configura y arranca el servidor FastAPI que actúa como puerta de enlace
 para todos los servicios del sistema.
 """
+import json
 import os
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, WebSocket, WebSocketDisconnect, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+from fastapi.responses import HTMLResponse
 from contextlib import asynccontextmanager
 from typing import List
 import uvicorn
+from pathlib import Path
 
 from .database import get_db, init_db
 from .routers import projects, tasks, daily_logs, risks, reports
@@ -46,8 +50,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Configurar templates
+BASE_DIR = Path(__file__).resolve().parent
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+
 # Montar archivos estáticos
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+
+# Ruta para servir el frontend
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # Incluir routers
 app.include_router(projects.router, prefix="/api/projects", tags=["projects"])
@@ -62,6 +75,63 @@ async def health_check():
     """Endpoint de verificación de salud del servicio."""
     return {"status": "ok", "service": "gateway"}
 
+# Import WebSocket manager
+from .websockets.manager import ConnectionManager
+
+# Create WebSocket manager instance
+manager = ConnectionManager()
+
+# WebSocket Endpoint
+@app.websocket("/ws/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    """
+    WebSocket endpoint for real-time communication.
+    
+    Args:
+        websocket: The WebSocket connection
+        client_id: Unique client identifier
+    """
+    # Accept connection and register client
+    await manager.connect(websocket, client_id)
+    
+    try:
+        while True:
+            # Receive message from client
+            data = await websocket.receive_text()
+            
+            # Parse message (expecting JSON)
+            try:
+                message = json.loads(data)
+                message_type = message.get('type', '')
+                
+                # Handle different message types
+                if message_type == 'subscribe':
+                    # Subscribe to channels
+                    channels = message.get('channels', [])
+                    await manager.subscribe(client_id, channels)
+                    
+                elif message_type == 'unsubscribe':
+                    # Unsubscribe from channels
+                    channels = message.get('channels', [])
+                    await manager.unsubscribe(client_id, channels)
+                    
+                else:
+                    # Echo message back to the client (for testing)
+                    await manager.send_personal_message(
+                        {"type": "echo", "data": message},
+                        client_id
+                    )
+                    
+            except json.JSONDecodeError:
+                await manager.send_personal_message(
+                    {"type": "error", "message": "Invalid JSON format"},
+                    client_id
+                )
+                
+    except WebSocketDisconnect:
+        manager.disconnect(client_id)
+        pass
+
 # Punto de entrada principal
 if __name__ == "__main__":
     uvicorn.run(
@@ -69,5 +139,6 @@ if __name__ == "__main__":
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.DEBUG,
-        workers=settings.WORKERS
+        workers=settings.WORKERS,
+        ws="none"  # Deshabilitar WebSockets
     )

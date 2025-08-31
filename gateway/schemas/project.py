@@ -2,8 +2,8 @@
 Esquemas para la gestión de proyectos.
 """
 from datetime import datetime
-from typing import Optional, List
-from pydantic import Field, validator
+from typing import Optional, List, Any, Dict, TYPE_CHECKING
+from pydantic import Field, validator, BaseModel
 from .base import BaseSchema, TimestampMixin, IDMixin
 
 class ProjectBase(BaseSchema):
@@ -46,27 +46,15 @@ class ProjectResponse(ProjectBase, IDMixin, TimestampMixin):
                 "updated_at": "2023-06-01T12:00:00"
             }
         }
+        
+        # Configuración para compatibilidad con Pydantic v1
+        json_encoders = {
+            datetime: lambda v: v.isoformat()
+        }
 
 class ProjectWithRelations(ProjectResponse):
     """Esquema que incluye las relaciones del proyecto."""
-    tasks: List["TaskResponse"] = Field(default_factory=list, description="Tareas del proyecto")
-    daily_logs: List["DailyLogResponse"] = Field(default_factory=list, description="Registros diarios")
-    risks: List["RiskResponse"] = Field(default_factory=list, description="Riesgos identificados")
-    reports: List["ReportResponse"] = Field(default_factory=list, description="Reportes generados")
-
-# Importaciones circulares al final
-def _resolve_forward_refs():
-    """Resuelve referencias circulares entre esquemas."""
-    from .task import TaskResponse
-    from .daily_log import DailyLogResponse
-    from .risk import RiskResponse
-    from .report import ReportResponse
-    
-    ProjectWithRelations.update_forward_refs(
-        TaskResponse=TaskResponse,
-        DailyLogResponse=DailyLogResponse,
-        RiskResponse=RiskResponse,
-        ReportResponse=ReportResponse
-    )
-
-_resolve_forward_refs()
+    tasks: List[str] = Field(default_factory=list, description="Tareas del proyecto")
+    daily_logs: List[str] = Field(default_factory=list, description="Registros diarios")
+    risks: List[str] = Field(default_factory=list, description="Riesgos identificados")
+    reports: List[str] = Field(default_factory=list, description="Reportes generados")

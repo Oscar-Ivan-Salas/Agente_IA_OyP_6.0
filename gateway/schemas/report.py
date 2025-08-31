@@ -2,10 +2,14 @@
 Esquemas para la gestión de reportes.
 """
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from enum import Enum
-from pydantic import Field, validator
+from pydantic import Field, validator, BaseModel
 from .base import BaseSchema, TimestampMixin, IDMixin
+
+# Para evitar importaciones circulares
+if TYPE_CHECKING:
+    from .project import ProjectResponse
 
 class ReportType(str, Enum):
     """Tipos de reportes disponibles."""
@@ -89,9 +93,14 @@ class ReportWithRelations(ReportResponse):
     """Esquema que incluye las relaciones del reporte."""
     project: Optional["ProjectResponse"] = Field(None, description="Proyecto relacionado")
 
-# Resolver referencias circulares
-def _resolve_forward_refs():
+# Función para resolver referencias circulares
+def _resolve_report_refs():
+    """Resuelve referencias circulares para el esquema de reportes."""
     from .project import ProjectResponse
-    ReportWithRelations.update_forward_refs(ProjectResponse=ProjectResponse)
+    
+    # Actualizar referencias circulares
+    ReportWithRelations.update_forward_refs(
+        ProjectResponse=ProjectResponse
+    )
 
-_resolve_forward_refs()
+_resolve_report_refs()

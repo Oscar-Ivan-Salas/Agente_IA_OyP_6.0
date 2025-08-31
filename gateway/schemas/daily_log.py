@@ -2,10 +2,14 @@
 Esquemas para la gestión de registros diarios.
 """
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from enum import Enum
-from pydantic import Field, validator
+from pydantic import Field, validator, BaseModel
 from .base import BaseSchema, TimestampMixin, IDMixin
+
+# Para evitar importaciones circulares
+if TYPE_CHECKING:
+    from .project import ProjectResponse
 
 class MoodLevel(str, Enum):
     """Niveles de ánimo para los registros diarios."""
@@ -72,9 +76,14 @@ class DailyLogWithRelations(DailyLogResponse):
     """Esquema que incluye las relaciones del registro diario."""
     project: Optional["ProjectResponse"] = Field(None, description="Proyecto relacionado")
 
-# Resolver referencias circulares
-def _resolve_forward_refs():
+# Función para resolver referencias circulares
+def _resolve_daily_log_refs():
+    """Resuelve referencias circulares para el esquema de registros diarios."""
     from .project import ProjectResponse
-    DailyLogWithRelations.update_forward_refs(ProjectResponse=ProjectResponse)
+    
+    # Actualizar referencias circulares
+    DailyLogWithRelations.update_forward_refs(
+        ProjectResponse=ProjectResponse
+    )
 
-_resolve_forward_refs()
+_resolve_daily_log_refs()

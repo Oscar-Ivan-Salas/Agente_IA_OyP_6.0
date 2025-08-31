@@ -2,10 +2,14 @@
 Esquemas para la gestión de riesgos.
 """
 from datetime import datetime
-from typing import Optional, Dict, Any, List
+from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from enum import Enum
-from pydantic import Field, validator, root_validator
+from pydantic import Field, validator, root_validator, BaseModel
 from .base import BaseSchema, TimestampMixin, IDMixin
+
+# Para evitar importaciones circulares
+if TYPE_CHECKING:
+    from .project import ProjectResponse
 
 class RiskCategory(str, Enum):
     """Categorías de riesgos."""
@@ -26,6 +30,14 @@ class RiskStatus(str, Enum):
     MITIGATED = "mitigated"
     OCCURRED = "occurred"
     CLOSED = "closed"
+
+class RiskProbability(str, Enum):
+    """Niveles de probabilidad de riesgos."""
+    VERY_LOW = "very_low"
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    VERY_HIGH = "very_high"
 
 class RiskSeverity(str, Enum):
     """Niveles de severidad de riesgos."""
@@ -118,9 +130,14 @@ class RiskWithRelations(RiskResponse):
     """Esquema que incluye las relaciones del riesgo."""
     project: Optional["ProjectResponse"] = Field(None, description="Proyecto relacionado")
 
-# Resolver referencias circulares
-def _resolve_forward_refs():
+# Función para resolver referencias circulares
+def _resolve_risk_refs():
+    """Resuelve referencias circulares para el esquema de riesgos."""
     from .project import ProjectResponse
-    RiskWithRelations.update_forward_refs(ProjectResponse=ProjectResponse)
+    
+    # Actualizar referencias circulares
+    RiskWithRelations.update_forward_refs(
+        ProjectResponse=ProjectResponse
+    )
 
-_resolve_forward_refs()
+_resolve_risk_refs()
