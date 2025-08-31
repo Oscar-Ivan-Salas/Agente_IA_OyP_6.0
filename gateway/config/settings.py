@@ -32,7 +32,7 @@ class GatewaySettings(BaseSettings):
     # ===============================================
     
     host: str = Field(default="0.0.0.0", env="HOST")
-    port: int = Field(default=8080, env="GATEWAY_PORT")
+    port: int = Field(default=8000, env="GATEWAY_PORT")
     reload: bool = Field(default=True, env="RELOAD")
     workers: int = Field(default=1, env="WORKERS")
     
@@ -74,7 +74,7 @@ class GatewaySettings(BaseSettings):
     # ===============================================
     
     cors_origins: List[str] = Field(
-        default=["http://localhost:8080", "http://127.0.0.1:8080"],
+        default=["http://localhost:8000", "http://127.0.0.1:8000"],
         env="CORS_ORIGINS"
     )
     cors_methods: List[str] = Field(default=["*"], env="CORS_METHODS")

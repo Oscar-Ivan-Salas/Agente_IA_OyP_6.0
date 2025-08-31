@@ -162,32 +162,50 @@ class HybridLLMEngine:
     
     async def _init_local_models(self):
         """Inicializar modelos locales"""
-        try:
-            device = "cuda" if torch.cuda.is_available() else "cpu"
-            logger.info(f"🖥️ Dispositivo: {device}")
+        if not TRANSFORMERS_AVAILABLE:
+            logger.warning("⚠️ Transformers no está disponible. No se cargarán modelos locales.")
+            return
             
-            # Cargar modelo básico
-            model_name = "distilgpt2"
-            logger.info(f"📥 Cargando {model_name}...")
-            
-            loop = asyncio.get_event_loop()
-            
-            def load_model():
-                tokenizer = AutoTokenizer.from_pretrained(model_name)
-                model = AutoModelForCausalLM.from_pretrained(model_name)
-                pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, device=-1)
-                return pipe
-            
-            pipeline_obj = await loop.run_in_executor(None, load_model)
-            self.models_local[model_name] = {
-                "pipeline": pipeline_obj,
-                "type": "text-generation"
-            }
-            
-            logger.info(f"✅ Modelo {model_name} cargado")
-            
-        except Exception as e:
-            logger.warning(f"⚠️ Error cargando modelos locales: {e}")
+        device = "cuda" if torch.cuda.is_available() else "cpu"
+        logger.info(f"🖥️ Dispositivo: {device}")
+        
+        # Cargar modelos según configuración
+        for task_type, models in self.settings.local_models.items():
+            for model_info in models:
+                model_name = model_info["name"]
+                try:
+                    logger.info(f"📥 Cargando {model_name} para tarea: {task_type}...")
+                    
+                    loop = asyncio.get_event_loop()
+                    
+                    def load_model(name=model_name, task=task_type):
+                        # Usar device_map="auto" para optimizar carga en GPU/CPU
+                        model_kwargs = {"device_map": "auto" if device == "cuda" else None}
+                        
+                        # Cargar pipeline con manejo de errores
+                        pipe = pipeline(
+                            task,
+                            model=name,
+                            device=0 if device == "cuda" else -1,
+                            model_kwargs=model_kwargs
+                        )
+                        return pipe
+                    
+                    # Cargar el modelo en un hilo separado para no bloquear
+                    pipeline_obj = await loop.run_in_executor(None, load_model)
+                    
+                    self.models_local[model_name] = {
+                        "pipeline": pipeline_obj,
+                        "type": task_type,
+                        "display_name": model_info.get("display_name", model_name),
+                        "size": model_info.get("size", "N/A")
+                    }
+                    
+                    logger.info(f"✅ Modelo {model_name} cargado correctamente")
+                    
+                except Exception as e:
+                    logger.error(f"❌ Error cargando modelo {model_name}: {str(e)}")
+                    continue
     
     async def generate_text(self, prompt: str, model_preference: str = "auto", 
                           max_length: int = 512, temperature: float = 0.7, **kwargs) -> Dict[str, Any]:
