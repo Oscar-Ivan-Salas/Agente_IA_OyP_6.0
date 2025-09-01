@@ -1,0 +1,2145 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+<title>Dashboard - Agente IA OyP 6.0</title>
+
+<!-- Tabler 1.4 (CSS) -->
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-vendors.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" rel="stylesheet"/>
+
+<style>
+:root { --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; }
+.page-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+.page-body { flex-grow: 1; }
+.content-section { display: none; animation: fadeIn 0.35s ease; }
+.content-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Zona de carga de archivos */
+#drop-zone { border: 2px dashed var(--tblr-border-color); border-radius: 14px; padding: 40px; text-align: center; cursor: pointer; transition: background .25s ease, border-color .25s ease; background: rgba(0,0,0,.02); }
+#drop-zone.dragover { background: rgba(70,127,207,.08); border-color: #467fcf; }
+
+/* Charts */
+#actividad-chart, #distribucion-chart, #recursos-chart, #almacenamiento-chart { min-height: 280px; }
+
+/* High-end look */
+.kpi-card { position: relative; overflow: hidden; border: 1px solid var(--tblr-border-color); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+.kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.kpi-card::after { content:""; position:absolute; inset:-20%; background: radial-gradient(60% 60% at 80% -10%, rgba(70,127,207,.15), transparent 70%); pointer-events:none; }
+.kpi-icon { width:44px; height:44px; display:inline-grid; place-items:center; border-radius:12px; background: rgba(70,127,207,.08); }
+.glass { backdrop-filter: saturate(1.2) blur(8px); background: rgba(255,255,255,.6); border: 1px solid var(--tblr-border-color); }
+[data-bs-theme="dark"] .glass { background: rgba(0,0,0,.25); }
+.quick-actions .btn { border-radius: 999px; margin: 0 4px 8px 0; }
+
+/* Tests badges */
+.test-badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; }
+.pass { background:#d3f9d8; color:#2b8a3e; }
+.fail { background:#ffe3e3; color:#c92a2a; }
+
+/* Dev banner */
+.dev-banner button:hover { background: rgba(255,255,255,0.3); }
+
+/* Loading states */
+.loading { opacity: 0.6; pointer-events: none; }
+.spinner-overlay { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+/* Chat improvements */
+.chat-message { 
+margin-bottom: 10px; 
+padding: 8px 12px; 
+border-radius: 12px; 
+max-width: 80%; 
+}
+.chat-message.user { 
+background: #467fcf; 
+color: white; 
+margin-left: auto; 
+}
+.chat-message.ai { 
+background: #f8f9fa; 
+border: 1px solid #dee2e6; 
+}
+.chat-message.system { 
+background: #fff3cd; 
+border: 1px solid #ffeaa7; 
+color: #856404; 
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+.quick-actions .btn { font-size: 0.875rem; padding: 0.375rem 0.75rem; }
+.kpi-card .h1 { font-size: 1.5rem; }
+}
+
+/* WebSocket status indicator */
+.ws-status { 
+display: inline-block; 
+width: 8px; 
+height: 8px; 
+border-radius: 50%; 
+background: #dc3545; 
+margin-right: 6px; 
+animation: pulse 2s infinite; 
+}
+.ws-status.connected { background: #28a745; }
+.ws-status.connecting { background: #ffc107; }
+</style>
+</head>
+<body>
+<div id="dev-banner" class="dev-banner" style="display: none;"></div>
+
+<div class="page">
+<!-- Sidebar -->
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+<div class="container-fluid">
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu" aria-controls="sidebar-menu" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <h1 class="navbar-brand navbar-brand-autodark">
+    <a href=".">
+      🤖 AGENTE IA OyP 6.0
+      <span class="ws-status" id="ws-indicator" title="Estado WebSocket"></span>
+    </a>
+  </h1>
+  <div class="collapse navbar-collapse" id="sidebar-menu">
+    <ul class="navbar-nav pt-lg-3">
+      <li class="nav-item"><a class="nav-link active" href="#" data-target="inicio"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-home"></i></span><span class="nav-link-title">Dashboard Principal</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="documentos"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-file-text"></i></span><span class="nav-link-title">Gestión de Documentos</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="ia"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-brain"></i></span><span class="nav-link-title">IA (Análisis y Predicción)</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="chat"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-message-circle"></i></span><span class="nav-link-title">Chat con IA en Tiempo Real</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="analisis"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-chart-bar"></i></span><span class="nav-link-title">Analytics SPSS</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="reportes"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-report"></i></span><span class="nav-link-title">Generación de Reportes</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="servicios"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-server"></i></span><span class="nav-link-title">Gestión de Servicios</span></a></li>
+      <li class="nav-item"><a class="nav-link" href="#" data-target="configuracion"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-settings"></i></span><span class="nav-link-title">Configuración</span></a></li>
+    </ul>
+  </div>
+</div>
+</aside>
+
+<!-- Page Content -->
+<div class="page-wrapper">
+<div class="page-header d-print-none">
+  <div class="container-xl">
+    <div class="row g-3 align-items-center">
+      <div class="col">
+        <div class="d-flex align-items-center gap-2">
+          <h2 class="page-title mb-0" id="page-title">Dashboard Principal</h2>
+          <span class="badge bg-primary-lt">v6.0</span>
+          <span class="badge bg-success-lt" id="auth-status">Conectado</span>
+        </div>
+      </div>
+      <div class="col-auto ms-auto d-print-none">
+        <div class="d-flex gap-2">
+          <div class="dropdown">
+            <a href="#" class="btn btn-icon" data-bs-toggle="dropdown" aria-expanded="false" title="Cambiar tema"><i class="ti ti-sun-high"></i></a>
+            <div class="dropdown-menu dropdown-menu-end">
+              <a class="dropdown-item" href="#" data-theme="light">Claro</a>
+              <a class="dropdown-item" href="#" data-theme="dark">Oscuro</a>
+              <a class="dropdown-item" href="#" data-theme="system">Sistema</a>
+            </div>
+          </div>
+          <button class="btn btn-outline-primary" onclick="refreshData()">
+            <i class="ti ti-refresh me-1"></i>Actualizar
+          </button>
+          <a href="#" class="btn btn-primary" data-go="documentos"><i class="ti ti-plus me-1"></i> Nuevo</a>
+        </div>
+      </div>
+    </div>
+    <div class="row mt-3 quick-actions">
+      <div class="col">
+        <div class="btn-list">
+          <a class="btn btn-outline-primary" href="#" data-go="documentos"><i class="ti ti-upload me-1"></i>Subir archivo</a>
+          <a class="btn btn-outline-success" href="#" data-go="ia"><i class="ti ti-brain me-1"></i>Análisis IA</a>
+          <a class="btn btn-outline-warning" href="#" data-go="analisis"><i class="ti ti-chart-line me-1"></i>Analytics SPSS</a>
+          <a class="btn btn-outline-info" href="#" data-go="chat"><i class="ti ti-message-circle me-1"></i>Chat IA</a>
+          <a class="btn btn-outline-secondary" href="#" data-go="reportes"><i class="ti ti-file-analytics me-1"></i>Generar reporte</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-body">
+  <div class="container-xl">
+    <div id="alerts-container" class="mb-3"></div>
+
+    <!-- SECCIÓN INICIO -->
+    <div id="inicio" class="content-section active">
+      <div class="row row-deck row-cards">
+        <!-- KPIs -->
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Documentos Totales</div>
+                <div class="kpi-icon"><i class="ti ti-files"></i></div>
+              </div>
+              <div class="h1 mb-0" id="total-documentos">Cargando...</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Procesados (Semana)</div>
+                <div class="kpi-icon"><i class="ti ti-calendar-stats"></i></div>
+              </div>
+              <div class="h1 mb-0" id="documentos-semana">Cargando...</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Precisión del Modelo IA</div>
+                <div class="kpi-icon"><i class="ti ti-target"></i></div>
+              </div>
+              <div class="h1 mb-0" id="precision-ia">Cargando...</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="card kpi-card">
+            <div class="card-body">
+              <div class="d-flex align-items-center justify-content-between">
+                <div class="subheader">Conexiones WebSocket</div>
+                <div class="kpi-icon"><i class="ti ti-wifi"></i></div>
+              </div>
+              <div class="h1 mb-0" id="conexiones-ws">0</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Gráficos -->
+        <div class="col-lg-7">
+          <div class="card glass">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">Actividad de la Última Semana</h3>
+                <span class="badge bg-blue-lt">7 días</span>
+              </div>
+              <div style="height:300px; position: relative;">
+                <canvas id="actividad-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-5">
+          <div class="card glass">
+            <div class="card-body">
+              <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title mb-0">Distribución de Documentos</h3>
+                <i class="ti ti-chart-donut"></i>
+              </div>
+              <div style="height:300px; position: relative;">
+                <canvas id="distribucion-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conclusiones y Estado de Servicios -->
+        <div class="col-md-6">
+          <div class="card glass h-100">
+            <div class="card-header">
+              <h3 class="card-title">Conclusiones Automáticas</h3>
+            </div>
+            <div class="card-body" id="conclusiones-container">
+              <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card glass h-100">
+            <div class="card-header">
+              <h3 class="card-title">Estado de los Servicios</h3>
+            </div>
+            <div class="card-body" id="servicios-container">
+              <div class="text-center py-3">
+                <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DOCUMENTOS -->
+    <div id="documentos" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Cargar Nuevo Documento</h3>
+        </div>
+        <div class="card-body">
+          <div id="drop-zone">
+            <i class="ti ti-cloud-upload" style="font-size: 48px; color: #467fcf;"></i>
+            <p class="mt-2 mb-1">Arrastra y suelta un archivo aquí o haz clic para seleccionar</p>
+            <small class="text-muted">Formatos soportados: PDF, DOCX, TXT, imágenes</small>
+            <input type="file" id="file-input" style="display: none;" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png">
+          </div>
+          <div id="file-preview" class="mt-3"></div>
+          <div class="mt-3">
+            <button id="upload-button" class="btn btn-primary" style="display: none;">
+              <i class="ti ti-upload me-1"></i>Subir y Procesar
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card mt-4">
+        <div class="card-header">
+          <h3 class="card-title">Texto Extraído</h3>
+        </div>
+        <div class="card-body">
+          <pre id="extracted-text" class="bg-light p-3 rounded" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">El resultado del procesamiento aparecerá aquí.</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN IA -->
+    <div id="ia" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Análisis de Texto con IA</h3>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="ia-text-input" class="form-label">Texto a analizar</label>
+            <textarea id="ia-text-input" class="form-control" rows="6" placeholder="Pega o escribe aquí el texto que quieres que la IA analice..."></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="ia-model-select" class="form-label">Modelo de IA</label>
+            <select id="ia-model-select" class="form-select">
+              <option value="local">Modelo Local (Offline)</option>
+              <option value="openai">OpenAI GPT-4</option>
+              <option value="anthropic">Anthropic Claude</option>
+              <option value="google">Google Gemini</option>
+            </select>
+          </div>
+          <button id="ia-analyze-button" class="btn btn-primary">
+            <i class="ti ti-brain me-1"></i>Analizar Texto
+          </button>
+          <div id="ia-result-container" class="mt-4" style="display: none;">
+            <h4>Resultado del Análisis:</h4>
+            <div class="card">
+              <div class="card-body">
+                <pre id="ia-result-text" class="mb-0" style="white-space: pre-wrap;"></pre>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CHAT -->
+    <div id="chat" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <div class="d-flex justify-content-between align-items-center">
+            <h3 class="card-title">Chat con IA en Tiempo Real</h3>
+            <span class="badge bg-green-lt" id="chat-status">WebSocket Conectado</span>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="chat-messages" class="mb-3" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; background: #f8f9fa;">
+            <div class="chat-message system">
+              <strong>Sistema:</strong> ¡Hola! Soy tu asistente de IA conectado en tiempo real. ¿En qué puedo ayudarte?
+            </div>
+          </div>
+          <div class="input-group">
+            <input type="text" id="chat-input" class="form-control" placeholder="Escribe tu mensaje..." maxlength="1000">
+            <button id="chat-send-button" class="btn btn-primary">
+              <i class="ti ti-send me-1"></i>Enviar
+            </button>
+          </div>
+          <small class="form-text text-muted">Máximo 1000 caracteres por mensaje</small>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN ANALYTICS SPSS -->
+    <div id="analisis" class="content-section">
+      <div class="card mb-4">
+        <div class="card-header">
+          <h3 class="card-title">Analytics SPSS - Análisis Estadístico</h3>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="dataset-file" class="form-label">Subir Dataset</label>
+                <input type="file" id="dataset-file" class="form-control" accept=".csv,.xlsx,.json">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="analysis-type" class="form-label">Tipo de Análisis</label>
+                <select id="analysis-type" class="form-select">
+                  <option value="descriptive">Estadísticas Descriptivas</option>
+                  <option value="correlation">Análisis de Correlación</option>
+                  <option value="regression">Regresión Lineal</option>
+                  <option value="clustering">Clustering K-means</option>
+                  <option value="anova">ANOVA</option>
+                  <option value="chi_square">Chi-cuadrado</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <button id="analyze-dataset-button" class="btn btn-primary">
+            <i class="ti ti-chart-line me-1"></i>Analizar Dataset
+          </button>
+          <div id="analysis-results" class="mt-4"></div>
+        </div>
+      </div>
+      
+      <div class="row row-deck row-cards">
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Uso de Recursos del Sistema</h3>
+              <div style="position: relative; height: 300px;">
+                <canvas id="recursos-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-lg-12">
+          <div class="card">
+            <div class="card-body">
+              <h3 class="card-title">Distribución de Almacenamiento</h3>
+              <div style="position: relative; height: 300px;">
+                <canvas id="almacenamiento-chart"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN REPORTES -->
+    <div id="reportes" class="content-section">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="card-title">Generación de Reportes</h3>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label for="report-type" class="form-label">Tipo de Reporte</label>
+            <select id="report-type" class="form-select">
+              <option value="general">Reporte General</option>
+              <option value="documentos">Análisis de Documentos</option>
+              <option value="ia">Rendimiento de IA</option>
+              <option value="recursos">Uso de Recursos</option>
+              <option value="analytics">Analytics SPSS</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="report-format" class="form-label">Formato de Salida</label>
+            <select id="report-format" class="form-select">
+              <option value="pdf">PDF</option>
+              <option value="excel">Excel</option>
+              <option value="html">HTML</option>
+              <option value="json">JSON</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="report-content-input" class="form-label">Contenido del Reporte</label>
+            <textarea id="report-content-input" class="form-control" rows="10" placeholder="Escribe el contenido que deseas incluir en el reporte..."></textarea>
+          </div>
+          <button id="generate-report-button" class="btn btn-primary">
+            <i class="ti ti-file-download me-1"></i>Generar Reporte
+          </button>
+          <div id="report-result-container" class="mt-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN SERVICIOS -->
+    <div id="servicios" class="content-section">
+      <div class="row row-deck row-cards">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Estado de Microservicios</h3>
+              <div class="card-actions">
+                <button class="btn btn-primary" onclick="loadServicesStatus()">
+                  <i class="ti ti-refresh me-1"></i>Actualizar
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="services-grid" class="row"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SECCIÓN CONFIGURACIÓN -->
+    <div id="configuracion" class="content-section">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Depuración y Mocks</h3>
+            </div>
+            <div class="card-body">
+              <div class="mb-2">Activar Mocks cuando el backend no responda o para pruebas locales.</div>
+              <div class="form-check form-switch mb-3">
+                <input class="form-check-input" type="checkbox" id="toggle-mocks" checked>
+                <label class="form-check-label" for="toggle-mocks">Usar datos Mock</label>
+              </div>
+              <div class="d-flex gap-2 flex-wrap">
+                <button id="btn-mock-dashboard" class="btn btn-outline-primary">
+                  <i class="ti ti-refresh me-1"></i>Cargar Dashboard (Mock)
+                </button>
+                <button id="btn-run-tests" class="btn btn-outline-secondary">
+                  <i class="ti ti-test-pipe me-1"></i>Ejecutar Tests
+                </button>
+                <button id="btn-clear-cache" class="btn btn-outline-warning">
+                  <i class="ti ti-trash me-1"></i>Limpiar Caché
+                </button>
+              </div>
+              <div id="test-results" class="mt-3"></div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Configuración de API</h3>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label for="api-timeout" class="form-label">Timeout API (segundos)</label>
+                <input type="number" id="api-timeout" class="form-control" value="10" min="5" max="60">
+              </div>
+              <div class="mb-3">
+                <label for="retry-attempts" class="form-label">Intentos de reintento</label>
+                <input type="number" id="retry-attempts" class="form-control" value="3" min="1" max="10">
+              </div>
+              <div class="mb-3">
+                <label for="websocket-url" class="form-label">URL WebSocket</label>
+                <input type="text" id="websocket-url" class="form-control" value="ws://localhost:8080/ws">
+              </div>
+              <button id="save-config" class="btn btn-success">
+                <i class="ti ti-device-floppy me-1"></i>Guardar Configuración
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+'use strict';
+
+// =====================
+// CONFIGURACIÓN Y ESTADO GLOBAL
+// =====================
+let token = localStorage.getItem('access_token') || '';
+let websocket = null;
+let wsConnected = false;
+const chartInstances = { actividad: null, distribucion: null, recursos: null, almacenamiento: null };
+const FLAGS = { 
+  USE_MOCKS: localStorage.getItem('USE_MOCKS') !== '0',
+  API_TIMEOUT: parseInt(localStorage.getItem('API_TIMEOUT')) || 10000,
+  RETRY_ATTEMPTS: parseInt(localStorage.getItem('RETRY_ATTEMPTS')) || 3,
+  WS_RECONNECT_ATTEMPTS: 0,
+  WS_MAX_RECONNECT_ATTEMPTS: 5,
+  WS_RECONNECT_DELAY: 1000,
+  WS_MAX_RECONNECT_DELAY: 30000
+};
+
+// API endpoints - INTEGRADOS CON EL BACKEND
+const API_BASE = window.location.origin;
+const WS_URL = localStorage.getItem('WEBSOCKET_URL') || `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`;
+
+const API = {
+  // Dashboard y datos principales
+  dashboard_data: () => `${API_BASE}/api/estadisticas/resumen`,
+  services_status: () => `${API_BASE}/api/services/status`,
+  system_metrics: () => `${API_BASE}/api/system/metrics`,
+  
+  // IA y análisis
+  ai_analyze: () => `${API_BASE}/api/services/ai_engine/analyze_text`,
+  
+  // Chat
+  chat_send: () => `${API_BASE}/api/services/chat_ai_service/send_message`,
+  
+  // Documentos
+  document_upload: () => `${API_BASE}/api/services/document_processor/upload`,
+  
+  // Analytics
+  analytics_upload: () => `${API_BASE}/api/services/analytics_engine/upload_dataset`,
+  
+  // Reportes
+  report_generate: () => `${API_BASE}/api/services/report_generator/generate`,
+  
+  // Configuración
+  config_flags: () => `${API_BASE}/api/config/flags`,
+  test_smoke: () => `${API_BASE}/api/test/smoke`,
+  utils_status: () => `${API_BASE}/api/utils/status`,
+  clear_cache: () => `${API_BASE}/api/utils/clear_cache`
+};
+
+// =====================
+// UTILIDADES
+// =====================
+function showToast(title, message, type = 'info', timeoutMs = 5000) {
+  const container = document.getElementById('alerts-container');
+  if (!container) return;
+
+  const id = 'alert-' + Math.random().toString(36).slice(2);
+  const colorMap = { 
+    success: 'alert-success', 
+    info: 'alert-info', 
+    warning: 'alert-warning', 
+    error: 'alert-danger' 
+  };
+  const iconMap = { 
+    success: 'ti-check', 
+    info: 'ti-info-circle', 
+    warning: 'ti-alert-triangle', 
+    error: 'ti-alert-octagon' 
+  };
+
+  const cls = colorMap[type] || colorMap.info;
+  const icon = iconMap[type] || iconMap.info;
+
+  const el = document.createElement('div');
+  el.className = `alert ${cls} alert-dismissible`;
+  el.id = id;
+  el.innerHTML = `
+    <div class="d-flex">
+      <i class="ti ${icon} me-2"></i>
+      <div>
+        <h4 class="alert-title mb-1">${title}</h4>
+        <div>${message}</div>
+      </div>
+    </div>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  `;
+
+  container.appendChild(el);
+
+  if (timeoutMs) {
+    setTimeout(() => {
+      if (el.parentNode) el.remove();
+    }, timeoutMs);
+  }
+}
+
+async function fetchWithAuth(url, options = {}) {
+  const opts = { ...options };
+  const headers = { 'Accept': 'application/json', ...(opts.headers || {}) };
+  
+  const isFormData = optsbanner { 
+position: fixed; 
+top: 0; 
+left: 0; 
+right: 0; 
+z-index: 9999; 
+background: linear-gradient(45deg, #ff6b6b, #4ecdc4); 
+color: white; 
+text-align: center; 
+padding: 8px; 
+font-size: 12px; 
+box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.dev-banner button { 
+background: rgba(255,255,255,0.2); 
+border: none; 
+color: white; 
+padding: 2px 8px; 
+border-radius: 4px; 
+cursor: pointer; 
+margin-left: 8px; 
+}
+.dev-
+
+
+
+
+
+
+
+
+
+
+
+<!-- SECCIÓN ANALYTICS SPSS -->
+        <div id="analisis" class="content-section">
+          <div class="card mb-4">
+            <div class="card-header">
+              <h3 class="card-title">Analytics SPSS - Análisis Estadístico</h3>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="dataset-file" class="form-label">Subir Dataset</label>
+                    <input type="file" id="dataset-file" class="form-control" accept=".csv,.xlsx,.json">
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mb-3">
+                    <label for="analysis-type" class="form-label">Tipo de Análisis</label>
+                    <select id="analysis-type" class="form-select">
+                      <option value="descriptive">Estadísticas Descriptivas</option>
+                      <option value="correlation">Análisis de Correlación</option>
+                      <option value="regression">Regresión Lineal</option>
+                      <option value="clustering">Clustering K-means</option>
+                      <option value="anova">ANOVA</option>
+                      <option value="chi_square">Chi-cuadrado</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <button id="analyze-dataset-button" class="btn btn-primary">
+                <i class="ti ti-chart-line me-1"></i>Analizar Dataset
+              </button>
+              <div id="analysis-results" class="mt-4"></div>
+            </div>
+          </div>
+          
+          <div class="row row-deck row-cards">
+            <div class="col-lg-12">
+              <div class="card">
+                <div class="card-body">
+                  <h3 class="card-title">Uso de Recursos del Sistema</h3>
+                  <div class="chart-container">
+                    <canvas id="recursos-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-12">
+              <div class="card">
+                <div class="card-body">
+                  <h3 class="card-title">Distribución de Almacenamiento</h3>
+                  <div class="chart-container">
+                    <canvas id="almacenamiento-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN REPORTES -->
+        <div id="reportes" class="content-section">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Generación de Reportes</h3>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label for="report-type" class="form-label">Tipo de Reporte</label>
+                <select id="report-type" class="form-select">
+                  <option value="general">Reporte General</option>
+                  <option value="documentos">Análisis de Documentos</option>
+                  <option value="ia">Rendimiento de IA</option>
+                  <option value="recursos">Uso de Recursos</option>
+                  <option value="analytics">Analytics SPSS</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="report-format" class="form-label">Formato de Salida</label>
+                <select id="report-format" class="form-select">
+                  <option value="pdf">PDF</option>
+                  <option value="excel">Excel</option>
+                  <option value="html">HTML</option>
+                  <option value="json">JSON</option>
+                </select>
+              </div>
+              <div class="mb-3">
+                <label for="report-content-input" class="form-label">Contenido del Reporte</label>
+                <textarea id="report-content-input" class="form-control custom-scroll" rows="10" placeholder="Escribe el contenido que deseas incluir en el reporte..."></textarea>
+              </div>
+              <button id="generate-report-button" class="btn btn-primary">
+                <i class="ti ti-file-download me-1"></i>Generar Reporte
+              </button>
+              <div id="report-result-container" class="mt-4"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN SERVICIOS -->
+        <div id="servicios" class="content-section">
+          <div class="row row-deck row-cards">
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Estado de Microservicios</h3>
+                  <div class="card-actions">
+                    <button class="btn btn-primary" id="refresh-services">
+                      <i class="ti ti-refresh me-1"></i>Actualizar
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div id="services-grid" class="row"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN CONFIGURACIÓN -->
+        <div id="configuracion" class="content-section">
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Depuración y Mocks</h3>
+                </div>
+                <div class="card-body">
+                  <div class="mb-2">Activar Mocks cuando el backend no responda o para pruebas locales.</div>
+                  <div class="form-check form-switch mb-3">
+                    <input class="form-check-input" type="checkbox" id="toggle-mocks" checked>
+                    <label class="form-check-label" for="toggle-mocks">Usar datos Mock</label>
+                  </div>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <button id="btn-mock-dashboard" class="btn btn-outline-primary">
+                      <i class="ti ti-refresh me-1"></i>Cargar Dashboard (Mock)
+                    </button>
+                    <button id="btn-run-tests" class="btn btn-outline-secondary">
+                      <i class="ti ti-test-pipe me-1"></i>Ejecutar Tests
+                    </button>
+                    <button id="btn-clear-cache" class="btn btn-outline-warning">
+                      <i class="ti ti-trash me-1"></i>Limpiar Caché
+                    </button>
+                  </div>
+                  <div id="test-results" class="mt-3"></div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Configuración de API</h3>
+                </div>
+                <div class="card-body form-enhanced">
+                  <div class="mb-3">
+                    <label for="api-timeout" class="form-label">Timeout API (segundos)</label>
+                    <input type="number" id="api-timeout" class="form-control" value="10" min="5" max="60">
+                  </div>
+                  <div class="mb-3">
+                    <label for="retry-attempts" class="form-label">Intentos de reintento</label>
+                    <input type="number" id="retry-attempts" class="form-control" value="3" min="1" max="10">
+                  </div>
+                  <div class="mb-3">
+                    <label for="websocket-url" class="form-label">URL WebSocket</label>
+                    <input type="text" id="websocket-url" class="form-control" value="ws://localhost:8080/ws">
+                  </div>
+                  <div class="mb-3">
+                    <label for="api-key-openai" class="form-label">OpenAI API Key</label>
+                    <input type="password" id="api-key-openai" class="form-control" placeholder="sk-...">
+                  </div>
+                  <div class="mb-3">
+                    <label for="api-key-anthropic" class="form-label">Anthropic API Key</label>
+                    <input type="password" id="api-key-anthropic" class="form-control" placeholder="ant-...">
+                  </div>
+                  <button id="save-config" class="btn btn-success">
+                    <i class="ti ti-device-floppy me-1"></i>Guardar Configuración
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div class="col-12">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Configuración Avanzada del Sistema</h3>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-4">
+                      <div class="card card-sm">
+                        <div class="card-body">
+                          <h5 class="card-title">Modelos IA Locales</h5>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-llama" checked>
+                            <label class="form-check-label" for="enable-llama">Llama 3.1 8B</label>
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-mistral">
+                            <label class="form-check-label" for="enable-mistral">Mistral 7B</label>
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-deepseek">
+                            <label class="form-check-label" for="enable-deepseek">DeepSeek R1</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card card-sm">
+                        <div class="card-body">
+                          <h5 class="card-title">Servicios Cloud</h5>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-openai">
+                            <label class="form-check-label" for="enable-openai">OpenAI GPT-4</label>
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-anthropic">
+                            <label class="form-check-label" for="enable-anthropic">Anthropic Claude</label>
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-google">
+                            <label class="form-check-label" for="enable-google">Google Gemini</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="col-md-4">
+                      <div class="card card-sm">
+                        <div class="card-body">
+                          <h5 class="card-title">Funcionalidades</h5>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-training" checked>
+                            <label class="form-check-label" for="enable-training">Entrenamiento IA</label>
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-agent" checked>
+                            <label class="form-check-label" for="enable-agent">Agente Accionable</label>
+                          </div>
+                          <div class="form-check form-switch mb-2">
+                            <input class="form-check-input" type="checkbox" id="enable-analytics" checked>
+                            <label class="form-check-label" for="enable-analytics">Analytics SPSS</label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div class="row mt-4">
+                    <div class="col-md-6">
+                      <h5>Configuración de Rendimiento</h5>
+                      <div class="mb-3">
+                        <label for="max-concurrent-requests" class="form-label">Requests Concurrentes Máximos</label>
+                        <input type="number" id="max-concurrent-requests" class="form-control" value="10" min="1" max="100">
+                      </div>
+                      <div class="mb-3">
+                        <label for="cache-size" class="form-label">Tamaño Caché (MB)</label>
+                        <input type="number" id="cache-size" class="form-control" value="512" min="64" max="2048">
+                      </div>
+                      <div class="mb-3">
+                        <label for="log-level" class="form-label">Nivel de Logging</label>
+                        <select id="log-level" class="form-select">
+                          <option value="DEBUG">DEBUG</option>
+                          <option value="INFO" selected>INFO</option>
+                          <option value="WARNING">WARNING</option>
+                          <option value="ERROR">ERROR</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <h5>Estado del Sistema</h5>
+                      <div class="mb-3">
+                        <label class="form-label">Uso de CPU</label>
+                        <div class="progress progress-enhanced mb-2">
+                          <div class="progress-bar" id="cpu-usage-bar" style="width: 45%">45%</div>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Uso de Memoria</label>
+                        <div class="progress progress-enhanced mb-2">
+                          <div class="progress-bar bg-success" id="memory-usage-bar" style="width: 67%">67%</div>
+                        </div>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Espacio en Disco</label>
+                        <div class="progress progress-enhanced mb-2">
+                          <div class="progress-bar bg-warning" id="disk-usage-bar" style="width: 34%">34%</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 pt-3 border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <div>
+                        <h6 class="mb-1">Información del Sistema</h6>
+                        <small class="text-muted">
+                          Versión: 6.0.0 | 
+                          Uptime: <span id="system-uptime">--</span> | 
+                          Última actualización: <span id="last-update">--</span>
+                        </small>
+                      </div>
+                      <div class="btn-list">
+                        <button class="btn btn-outline-danger" id="restart-system">
+                          <i class="ti ti-refresh me-1"></i>Reiniciar Sistema
+                        </button>
+                        <button class="btn btn-outline-secondary" id="export-config">
+                          <i class="ti ti-download me-1"></i>Exportar Configuración
+                        </button>
+                        <button class="btn btn-outline-primary" id="import-config">
+                          <i class="ti ti-upload me-1"></i>Importar Configuración
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts Base -->
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+
+<!-- Configuración Base JavaScript -->
+<script>
+'use strict';
+
+// Configuración Global
+window.AgenteIA = {
+  version: '6.0.0',
+  config: {
+    API_BASE: window.location.origin,
+    WS_URL: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`,
+    USE_MOCKS: localStorage.getItem('USE_MOCKS') !== '0',
+    API_TIMEOUT: parseInt(localStorage.getItem('API_TIMEOUT')) || 10000,
+    RETRY_ATTEMPTS: parseInt(localStorage.getItem('RETRY_ATTEMPTS')) || 3,
+    DEBUG: false
+  },
+  state: {
+    currentSection: 'inicio',
+    websocketConnected: false,
+    trainingInProgress: false,
+    agentStats: { actionsCount: 0, successCount: 0, lastAction: 'Ninguna' },
+    chartInstances: {},
+    connectionManager: null
+  }
+};
+
+// Inicialización Base
+document.addEventListener('DOMContentLoaded', function() {
+  console.log('🚀 Inicializando Agente IA OyP 6.0...');
+  
+  // Configurar navegación básica
+  setupBasicNavigation();
+  
+  // Configurar theme switcher
+  setupThemeSwitcher();
+  
+  // Mostrar sección inicial
+  showSection('inicio');
+  
+  console.log('✅ Dashboard HTML cargado - Esperando scripts funcionales...');
+});
+
+// Navegación Básica
+function setupBasicNavigation() {
+  document.querySelectorAll('[data-target]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = link.getAttribute('data-target');
+      showSection(target);
+      
+      // Actualizar navegación activa
+      document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+      
+      // Actualizar título
+      const title = link.querySelector('.nav-link-title')?.textContent || target;
+      document.getElementById('page-title').textContent = title;
+    });
+  });
+
+  // Quick actions
+  document.querySelectorAll('[data-go]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      const target = link.getAttribute('data-go');
+      showSection(target);
+    });
+  });
+}
+
+// Theme Switcher
+function setupThemeSwitcher() {
+  document.querySelectorAll('[data-theme]').forEach(button => {
+    button.addEventListener('click', (e) => {
+      e.preventDefault();
+      const theme = button.getAttribute('data-theme');
+      setTheme(theme);
+    });
+  });
+
+  // Aplicar tema guardado
+  const savedTheme = localStorage.getItem('theme') || 'system';
+  setTheme(savedTheme);
+}
+
+function setTheme(theme) {
+  const html = document.documentElement;
+  
+  if (theme === 'system') {
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    html.setAttribute('data-bs-theme', prefersDark ? 'dark' : 'light');
+  } else {
+    html.setAttribute('data-bs-theme', theme);
+  }
+  
+  localStorage.setItem('theme', theme);
+}
+
+// Mostrar Sección
+function showSection(sectionId) {
+  // Ocultar todas las secciones
+  document.querySelectorAll('.content-section').forEach(section => {
+    section.classList.remove('active');
+  });
+
+  // Mostrar sección seleccionada
+  const targetSection = document.getElementById(sectionId);
+  if (targetSection) {
+    targetSection.classList.add('active');
+    window.AgenteIA.state.currentSection = sectionId;
+    
+    // Trigger evento personalizado para scripts funcionales
+    document.dispatchEvent(new CustomEvent('sectionChanged', { detail: { section: sectionId } }));
+  }
+}
+
+// Utilidades básicas
+function showBasicAlert(message, type = 'info') {
+  const container = document.getElementById('alerts-container');
+  if (!container) return;
+
+  const alertDiv = document.createElement('div');
+  alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+  alertDiv.innerHTML = `
+    ${message}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  `;
+  
+  container.appendChild(alertDiv);
+
+  // Auto-remove después de 5 segundos
+  setTimeout(() => {
+    if (alertDiv.parentNode) {
+      alertDiv.remove();
+    }
+  }, 5000);
+}
+
+// Configuración de elementos básicos
+document.addEventListener('DOMContentLoaded', function() {
+  // WebSocket status indicator básico
+  const wsIndicator = document.getElementById('ws-indicator');
+  if (wsIndicator) {
+    wsIndicator.className = 'ws-status';
+    wsIndicator.title = 'WebSocket Desconectado - Esperando scripts funcionales';
+  }
+
+  // Configurar botones básicos
+  const refreshBtn = document.getElementById('refresh-data-btn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', () => {
+      showBasicAlert('Función de actualización disponible cuando se carguen los scripts funcionales', 'info');
+    });
+  }
+});
+
+// Placeholder para scripts funcionales
+console.log('📋 HTML Dashboard Base v6.0 - Estructura completa cargada');
+console.log('⏳ Esperando carga de scripts funcionales (core.js, interactions.js, app.js)');
+console.log('🔧 Total elementos configurados:', {
+  sections: document.querySelectorAll('.content-section').length,
+  navLinks: document.querySelectorAll('[data-target]').length,
+  forms: document.querySelectorAll('form, input, select, textarea').length,
+  buttons: document.querySelectorAll('button').length
+});
+
+</script>
+
+</body>
+</html><!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+<title>Dashboard - Agente IA OyP 6.0</title>
+
+<!-- Tabler 1.4 Framework -->
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/css/tabler-vendors.min.css" rel="stylesheet"/>
+<link href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css" rel="stylesheet"/>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+:root { 
+  --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif; 
+  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+  --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  --info-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+}
+
+/* Layout Base */
+.page-wrapper { display: flex; flex-direction: column; min-height: 100vh; }
+.page-body { flex-grow: 1; }
+
+/* Secciones de Contenido */
+.content-section { display: none; animation: fadeIn 0.35s ease; }
+.content-section.active { display: block; }
+
+@keyframes fadeIn { 
+  from { opacity: 0; transform: translateY(6px); } 
+  to { opacity: 1; transform: translateY(0); } 
+}
+
+/* Zona de Carga de Archivos */
+#drop-zone { 
+  border: 2px dashed var(--tblr-border-color); 
+  border-radius: 14px; 
+  padding: 40px; 
+  text-align: center; 
+  cursor: pointer; 
+  transition: all 0.25s ease; 
+  background: rgba(0,0,0,.02); 
+}
+#drop-zone.dragover { 
+  background: rgba(70,127,207,.08); 
+  border-color: #467fcf; 
+  transform: scale(1.02);
+}
+#drop-zone:hover {
+  border-color: #467fcf;
+  background: rgba(70,127,207,.04);
+}
+
+/* KPI Cards */
+.kpi-card { 
+  position: relative; 
+  overflow: hidden; 
+  border: 1px solid var(--tblr-border-color); 
+  transition: all 0.3s ease; 
+  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+}
+.kpi-card:hover { 
+  transform: translateY(-4px); 
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15); 
+}
+.kpi-card::after { 
+  content: ""; 
+  position: absolute; 
+  inset: -20%; 
+  background: radial-gradient(60% 60% at 80% -10%, rgba(70,127,207,.15), transparent 70%); 
+  pointer-events: none; 
+}
+.kpi-icon { 
+  width: 44px; 
+  height: 44px; 
+  display: inline-grid; 
+  place-items: center; 
+  border-radius: 12px; 
+  background: rgba(70,127,207,.08); 
+  transition: all 0.3s ease;
+}
+.kpi-card:hover .kpi-icon {
+  background: rgba(70,127,207,.15);
+  transform: scale(1.1);
+}
+
+/* Glass Effect */
+.glass { 
+  backdrop-filter: saturate(1.2) blur(8px); 
+  background: rgba(255,255,255,.6); 
+  border: 1px solid var(--tblr-border-color); 
+}
+[data-bs-theme="dark"] .glass { background: rgba(0,0,0,.25); }
+
+/* Quick Actions */
+.quick-actions .btn { 
+  border-radius: 999px; 
+  margin: 0 4px 8px 0; 
+  transition: all 0.3s ease;
+}
+.quick-actions .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Training Pipeline Styles */
+.training-step { 
+  border: 2px solid #dee2e6; 
+  border-radius: 12px; 
+  padding: 24px; 
+  margin-bottom: 20px; 
+  position: relative; 
+  transition: all 0.4s ease; 
+  background: linear-gradient(135deg, rgba(255,255,255,0.8) 0%, rgba(248,249,250,0.9) 100%);
+}
+.training-step.active { 
+  border-color: #467fcf; 
+  background: linear-gradient(135deg, rgba(70,127,207,0.1) 0%, rgba(70,127,207,0.05) 100%);
+  box-shadow: 0 8px 25px rgba(70,127,207,0.2);
+}
+.training-step.completed { 
+  border-color: #28a745; 
+  background: linear-gradient(135deg, rgba(40,167,69,0.1) 0%, rgba(40,167,69,0.05) 100%);
+}
+.training-step.error { 
+  border-color: #dc3545; 
+  background: linear-gradient(135deg, rgba(220,53,69,0.1) 0%, rgba(220,53,69,0.05) 100%);
+}
+
+.step-number { 
+  position: absolute; 
+  top: -12px; 
+  left: 24px; 
+  background: white; 
+  padding: 4px 12px; 
+  font-weight: bold; 
+  color: #467fcf; 
+  border-radius: 20px;
+  border: 2px solid #467fcf;
+  font-size: 14px;
+}
+
+/* Model Cards */
+.model-card { 
+  border: 1px solid #dee2e6; 
+  border-radius: 12px; 
+  padding: 16px; 
+  margin-bottom: 12px; 
+  cursor: pointer; 
+  transition: all 0.3s ease; 
+  background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(248,249,250,0.8) 100%);
+}
+.model-card:hover { 
+  border-color: #467fcf; 
+  box-shadow: 0 4px 15px rgba(70,127,207,0.2);
+  transform: translateY(-2px);
+}
+.model-card.selected { 
+  border-color: #467fcf; 
+  background: linear-gradient(135deg, rgba(70,127,207,0.1) 0%, rgba(70,127,207,0.05) 100%);
+}
+
+/* Agent Command Interface */
+.agent-command { 
+  background: var(--primary-gradient);
+  border-radius: 16px; 
+  padding: 24px; 
+  color: white; 
+  margin-bottom: 24px; 
+  position: relative;
+  overflow: hidden;
+}
+.agent-command .command-input { 
+  background: rgba(255,255,255,0.15); 
+  border: 1px solid rgba(255,255,255,0.25); 
+  color: white; 
+  border-radius: 12px; 
+  backdrop-filter: blur(10px);
+}
+.agent-command .command-input::placeholder { color: rgba(255,255,255,0.7); }
+
+/* Chat Messages */
+.chat-message { 
+  margin-bottom: 12px; 
+  padding: 10px 14px; 
+  border-radius: 16px; 
+  max-width: 85%; 
+  animation: slideIn 0.3s ease;
+}
+.chat-message.user { 
+  background: var(--primary-gradient);
+  color: white; 
+  margin-left: auto; 
+  border-bottom-right-radius: 4px;
+}
+.chat-message.ai { 
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border: 1px solid #dee2e6; 
+  border-bottom-left-radius: 4px;
+}
+.chat-message.system { 
+  background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+  border: 1px solid #ffeaa7; 
+  color: #856404; 
+  margin: 0 auto;
+  max-width: 70%;
+  text-align: center;
+}
+
+/* Status Indicators */
+.ws-status { 
+  display: inline-block; 
+  width: 8px; 
+  height: 8px; 
+  border-radius: 50%; 
+  background: #dc3545; 
+  margin-right: 6px; 
+  animation: pulse 2s infinite; 
+}
+.ws-status.connected { background: #28a745; }
+.ws-status.connecting { background: #ffc107; }
+
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(40, 167, 69, 0); }
+}
+
+/* Test Badges */
+.test-badge { 
+  display: inline-block; 
+  padding: 4px 10px; 
+  border-radius: 999px; 
+  font-size: 12px; 
+  font-weight: 500;
+  margin: 2px;
+}
+.test-badge.pass { 
+  background: linear-gradient(135deg, #d3f9d8 0%, #c3f7ca 100%);
+  color: #2b8a3e; 
+}
+.test-badge.fail { 
+  background: linear-gradient(135deg, #ffe3e3 0%, #ffc9c9 100%);
+  color: #c92a2a; 
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .quick-actions .btn { font-size: 0.875rem; padding: 0.375rem 0.75rem; }
+  .kpi-card .h1 { font-size: 1.75rem; }
+  .agent-command { padding: 16px; }
+  .training-step { padding: 16px; }
+  .chat-message { max-width: 90%; }
+}
+
+@media (max-width: 576px) {
+  .container-xl { padding: 0 12px; }
+  .kpi-card .h1 { font-size: 1.5rem; }
+}
+</style>
+</head>
+
+<body>
+<div class="page">
+  <!-- Sidebar -->
+  <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <h1 class="navbar-brand navbar-brand-autodark">
+        <a href="#">
+          🤖 AGENTE IA OyP 6.0
+          <span class="ws-status" id="ws-indicator" title="Estado WebSocket"></span>
+        </a>
+      </h1>
+      <div class="collapse navbar-collapse" id="sidebar-menu">
+        <ul class="navbar-nav pt-lg-3">
+          <li class="nav-item">
+            <a class="nav-link active" href="#" data-target="inicio">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-home"></i></span>
+              <span class="nav-link-title">Dashboard Principal</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="documentos">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-file-text"></i></span>
+              <span class="nav-link-title">Gestión de Documentos</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="ia">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-brain"></i></span>
+              <span class="nav-link-title">IA (Análisis y Predicción)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="entrenamiento">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-robot"></i></span>
+              <span class="nav-link-title">Entrenamiento IA</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="agente">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-wand"></i></span>
+              <span class="nav-link-title">Agente Accionable</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="chat">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-message-circle"></i></span>
+              <span class="nav-link-title">Chat con IA en Tiempo Real</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="analisis">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-chart-bar"></i></span>
+              <span class="nav-link-title">Analytics SPSS</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="reportes">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-report"></i></span>
+              <span class="nav-link-title">Generación de Reportes</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="servicios">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-server"></i></span>
+              <span class="nav-link-title">Gestión de Servicios</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" data-target="configuracion">
+              <span class="nav-link-icon d-md-none d-lg-inline-block"><i class="ti ti-settings"></i></span>
+              <span class="nav-link-title">Configuración</span>
+            </a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Page Content -->
+  <div class="page-wrapper">
+    <div class="page-header d-print-none">
+      <div class="container-xl">
+        <div class="row g-3 align-items-center">
+          <div class="col">
+            <div class="d-flex align-items-center gap-2">
+              <h2 class="page-title mb-0" id="page-title">Dashboard Principal</h2>
+              <span class="badge bg-primary-lt">v6.0</span>
+              <span class="badge bg-success-lt" id="auth-status">Conectado</span>
+            </div>
+          </div>
+          <div class="col-auto ms-auto d-print-none">
+            <div class="d-flex gap-2">
+              <div class="dropdown">
+                <a href="#" class="btn btn-icon" data-bs-toggle="dropdown" title="Cambiar tema">
+                  <i class="ti ti-sun-high"></i>
+                </a>
+                <div class="dropdown-menu dropdown-menu-end">
+                  <a class="dropdown-item" href="#" data-theme="light">
+                    <i class="ti ti-sun me-2"></i>Claro
+                  </a>
+                  <a class="dropdown-item" href="#" data-theme="dark">
+                    <i class="ti ti-moon me-2"></i>Oscuro
+                  </a>
+                  <a class="dropdown-item" href="#" data-theme="system">
+                    <i class="ti ti-device-desktop me-2"></i>Sistema
+                  </a>
+                </div>
+              </div>
+              <button class="btn btn-outline-primary" id="refresh-data-btn">
+                <i class="ti ti-refresh me-1"></i>Actualizar
+              </button>
+              <a href="#" class="btn btn-primary" data-go="documentos">
+                <i class="ti ti-plus me-1"></i> Nuevo
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3 quick-actions">
+          <div class="col">
+            <div class="btn-list">
+              <a class="btn btn-outline-primary" href="#" data-go="documentos">
+                <i class="ti ti-upload me-1"></i>Subir archivo
+              </a>
+              <a class="btn btn-outline-success" href="#" data-go="ia">
+                <i class="ti ti-brain me-1"></i>Análisis IA
+              </a>
+              <a class="btn btn-outline-warning" href="#" data-go="analisis">
+                <i class="ti ti-chart-line me-1"></i>Analytics SPSS
+              </a>
+              <a class="btn btn-outline-info" href="#" data-go="chat">
+                <i class="ti ti-message-circle me-1"></i>Chat IA
+              </a>
+              <a class="btn btn-outline-secondary" href="#" data-go="reportes">
+                <i class="ti ti-file-analytics me-1"></i>Generar reporte
+              </a>
+              <a class="btn btn-outline-danger" href="#" data-go="entrenamiento">
+                <i class="ti ti-robot me-1"></i>Entrenar IA
+              </a>
+              <a class="btn btn-outline-dark" href="#" data-go="agente">
+                <i class="ti ti-wand me-1"></i>Agente Accionable
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-body">
+      <div class="container-xl">
+        <div id="alerts-container" class="mb-3"></div>
+
+        <!-- SECCIÓN INICIO -->
+        <div id="inicio" class="content-section active">
+          <div class="row row-deck row-cards">
+            <!-- KPIs Principales -->
+            <div class="col-sm-6 col-lg-3">
+              <div class="card kpi-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="subheader">Documentos Totales</div>
+                    <div class="kpi-icon"><i class="ti ti-files"></i></div>
+                  </div>
+                  <div class="h1 mb-0" id="total-documentos">Cargando...</div>
+                  <div class="text-muted mt-1">
+                    <span class="text-success">+12%</span> vs mes anterior
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="card kpi-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="subheader">Procesados (Semana)</div>
+                    <div class="kpi-icon"><i class="ti ti-calendar-stats"></i></div>
+                  </div>
+                  <div class="h1 mb-0" id="documentos-semana">Cargando...</div>
+                  <div class="text-muted mt-1">
+                    <span class="text-warning">-3%</span> vs semana anterior
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="card kpi-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="subheader">Precisión del Modelo IA</div>
+                    <div class="kpi-icon"><i class="ti ti-target"></i></div>
+                  </div>
+                  <div class="h1 mb-0" id="precision-ia">Cargando...</div>
+                  <div class="text-muted mt-1">
+                    <span class="text-success">+2.1%</span> última actualización
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-sm-6 col-lg-3">
+              <div class="card kpi-card">
+                <div class="card-body">
+                  <div class="d-flex align-items-center justify-content-between">
+                    <div class="subheader">Conexiones WebSocket</div>
+                    <div class="kpi-icon"><i class="ti ti-wifi"></i></div>
+                  </div>
+                  <div class="h1 mb-0" id="conexiones-ws">0</div>
+                  <div class="text-muted mt-1">
+                    <span class="text-info">Tiempo real</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Gráficos Principales -->
+            <div class="col-lg-7">
+              <div class="card glass">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Actividad de la Última Semana</h3>
+                    <span class="badge bg-blue-lt">7 días</span>
+                  </div>
+                  <div style="height:300px; position: relative;">
+                    <canvas id="actividad-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-5">
+              <div class="card glass">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="card-title mb-0">Distribución de Documentos</h3>
+                    <i class="ti ti-chart-donut"></i>
+                  </div>
+                  <div style="height:300px; position: relative;">
+                    <canvas id="distribucion-chart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conclusiones y Estado de Servicios -->
+            <div class="col-md-6">
+              <div class="card glass h-100">
+                <div class="card-header">
+                  <h3 class="card-title">Conclusiones Automáticas</h3>
+                </div>
+                <div class="card-body" id="conclusiones-container">
+                  <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="card glass h-100">
+                <div class="card-header">
+                  <h3 class="card-title">Estado de los Servicios</h3>
+                </div>
+                <div class="card-body" id="servicios-container">
+                  <div class="text-center py-3">
+                    <div class="spinner-border spinner-border-sm text-secondary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- SECCIÓN DOCUMENTOS -->
+        <div id="documentos" class="content-section">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Cargar Nuevo Documento</h3>
+            </div>
+            <div class="card-body">
+              <div id="drop-zone">
+                <i class="ti ti-cloud-upload" style="font-size: 48px; color: #467fcf;"></i>
+                <p class="mt-2 mb-1">Arrastra y suelta un archivo aquí o haz clic para seleccionar</p>
+                <small class="text-muted">Formatos soportados: PDF, DOCX, TXT, imágenes</small>
+                <input type="file" id="file-input" style="display: none;" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png">
+              </div>
+              <div id="file-preview" class="mt-3"></div>
+              <div class="mt-3">
+                <button id="upload-button" class="btn btn-primary" style="display: none;">
+                  <i class="ti ti-upload me-1"></i>Subir y Procesar
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="card mt-4">
+            <div class="card-header">
+              <h3 class="card-title">Texto Extraído</h3>
+            </div>
+            <div class="card-body">
+              <pre id="extracted-text" class="bg-light p-3 rounded custom-scroll" style="white-space: pre-wrap; max-height: 400px; overflow-y: auto;">El resultado del procesamiento aparecerá aquí.</pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN IA -->
+        <div id="ia" class="content-section">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Análisis de Texto con IA</h3>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <label for="ia-text-input" class="form-label">Texto a analizar</label>
+                <textarea id="ia-text-input" class="form-control" rows="6" placeholder="Pega o escribe aquí el texto que quieres que la IA analice..."></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="ia-model-select" class="form-label">Modelo de IA</label>
+                <select id="ia-model-select" class="form-select">
+                  <option value="local">Modelo Local (Offline)</option>
+                  <option value="openai">OpenAI GPT-4</option>
+                  <option value="anthropic">Anthropic Claude</option>
+                  <option value="google">Google Gemini</option>
+                </select>
+              </div>
+              <button id="ia-analyze-button" class="btn btn-primary">
+                <i class="ti ti-brain me-1"></i>Analizar Texto
+              </button>
+              <div id="ia-result-container" class="mt-4" style="display: none;">
+                <h4>Resultado del Análisis:</h4>
+                <div class="card">
+                  <div class="card-body">
+                    <pre id="ia-result-text" class="mb-0 custom-scroll" style="white-space: pre-wrap;"></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN ENTRENAMIENTO IA -->
+        <div id="entrenamiento" class="content-section">
+          <div class="row">
+            <div class="col-lg-8">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Centro de Entrenamiento IA</h3>
+                  <div class="card-actions">
+                    <button class="btn btn-primary" id="start-training-wizard">
+                      <i class="ti ti-plus me-1"></i>Nuevo Entrenamiento
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div id="training-wizard" style="display: none;">
+                    <div class="training-step active" id="step-1">
+                      <span class="step-number">1</span>
+                      <h4>Configuración del Proyecto</h4>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <label class="form-label">Nombre del Proyecto</label>
+                          <input type="text" id="project-name" class="form-control" placeholder="Ej: Análisis Contratos Empresa X">
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Tipo de Entrenamiento</label>
+                          <select id="training-type" class="form-select">
+                            <option value="classification">Clasificación de Documentos</option>
+                            <option value="extraction">Extracción de Información</option>
+                            <option value="sentiment">Análisis de Sentimientos</option>
+                            <option value="summarization">Resumen Automático</option>
+                            <option value="custom">Personalizado</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="training-step" id="step-2">
+                      <span class="step-number">2</span>
+                      <h4>Selección de Documentos</h4>
+                      <div class="mb-3">
+                        <label class="form-label">Carpeta de Documentos</label>
+                        <select id="document-folder" class="form-select">
+                          <option value="">Seleccionar carpeta...</option>
+                          <option value="empresa-x">Documentos Empresa X</option>
+                          <option value="contratos">Contratos Legales</option>
+                          <option value="facturas">Facturas y Recibos</option>
+                          <option value="informes">Informes Técnicos</option>
+                        </select>
+                      </div>
+                      <div class="mb-3">
+                        <label class="form-label">Filtros de Documentos</label>
+                        <div class="row">
+                          <div class="col-md-4">
+                            <input type="date" id="date-from" class="form-control" placeholder="Desde">
+                          </div>
+                          <div class="col-md-4">
+                            <input type="date" id="date-to" class="form-control" placeholder="Hasta">
+                          </div>
+                          <div class="col-md-4">
+                            <select id="document-type-filter" class="form-select">
+                              <option value="">Todos los tipos</option>
+                              <option value="pdf">Solo PDF</option>
+                              <option value="docx">Solo DOCX</option>
+                              <option value="txt">Solo TXT</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+                      <div id="document-preview" class="border rounded p-3">
+                        <strong>Documentos encontrados:</strong> <span id="doc-count">0</span>
+                        <div id="doc-list" class="mt-2"></div>
+                      </div>
+                    </div>
+
+                    <div class="training-step" id="step-3">
+                      <span class="step-number">3</span>
+                      <h4>Configuración del Modelo</h4>
+                      <div class="row">
+                        <div class="col-md-6">
+                          <label class="form-label">Modelo Base</label>
+                          <select id="base-model" class="form-select">
+                            <option value="llama-3.1-8b">Llama 3.1 8B (Local)</option>
+                            <option value="mistral-7b">Mistral 7B (Local)</option>
+                            <option value="deepseek-r1">DeepSeek R1 (Local)</option>
+                            <option value="gpt-4">GPT-4 (Cloud)</option>
+                            <option value="claude-3">Claude 3 (Cloud)</option>
+                          </select>
+                        </div>
+                        <div class="col-md-6">
+                          <label class="form-label">Técnica de Entrenamiento</label>
+                          <select id="training-technique" class="form-select">
+                            <option value="fine-tuning">Fine-tuning Completo</option>
+                            <option value="lora">LoRA (Eficiente)</option>
+                            <option value="prompt-engineering">Prompt Engineering</option>
+                            <option value="rag">RAG (Retrieval)</option>
+                          </select>
+                        </div>
+                      </div>
+                      <div class="row mt-3">
+                        <div class="col-md-4">
+                          <label class="form-label">Épocas</label>
+                          <input type="number" id="epochs" class="form-control" value="3" min="1" max="20">
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label">Learning Rate</label>
+                          <input type="number" id="learning-rate" class="form-control" value="0.0001" step="0.0001">
+                        </div>
+                        <div class="col-md-4">
+                          <label class="form-label">Batch Size</label>
+                          <input type="number" id="batch-size" class="form-control" value="8" min="1" max="32">
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="training-step" id="step-4">
+                      <span class="step-number">4</span>
+                      <h4>Ejecutar Entrenamiento</h4>
+                      <div class="mb-3">
+                        <div class="progress progress-enhanced">
+                          <div id="training-progress" class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <small class="text-muted" id="training-status">Listo para comenzar</small>
+                      </div>
+                      <div id="training-logs" class="border rounded p-3 custom-scroll" style="height: 200px; overflow-y: auto; background: #f8f9fa; font-family: monospace; font-size: 0.875rem;"></div>
+                    </div>
+
+                    <div class="mt-3 d-flex justify-content-between">
+                      <button id="prev-step" class="btn btn-outline-secondary" disabled>
+                        <i class="ti ti-arrow-left me-1"></i>Anterior
+                      </button>
+                      <button id="next-step" class="btn btn-primary">
+                        Siguiente<i class="ti ti-arrow-right ms-1"></i>
+                      </button>
+                      <button id="start-training" class="btn btn-success" style="display: none;">
+                        <i class="ti ti-play me-1"></i>Iniciar Entrenamiento
+                      </button>
+                    </div>
+                  </div>
+
+                  <div id="training-projects" class="mt-4">
+                    <h4>Proyectos de Entrenamiento</h4>
+                    <div id="projects-list" class="row"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="col-lg-4">
+              <div class="card">
+                <div class="card-header">
+                  <h3 class="card-title">Modelos Disponibles</h3>
+                </div>
+                <div class="card-body">
+                  <div id="models-list">
+                    <div class="model-card" data-model="llama-3.1-8b">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Llama 3.1 8B</strong>
+                          <br><small class="text-muted">Local • 8B parámetros</small>
+                        </div>
+                        <span class="badge bg-green-lt">Disponible</span>
+                      </div>
+                    </div>
+                    <div class="model-card" data-model="mistral-7b">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>Mistral 7B</strong>
+                          <br><small class="text-muted">Local • 7B parámetros</small>
+                        </div>
+                        <span class="badge bg-green-lt">Disponible</span>
+                      </div>
+                    </div>
+                    <div class="model-card" data-model="deepseek-r1">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>DeepSeek R1</strong>
+                          <br><small class="text-muted">Local • Razonamiento</small>
+                        </div>
+                        <span class="badge bg-yellow-lt">Descargando</span>
+                      </div>
+                    </div>
+                    <div class="model-card" data-model="gpt-4">
+                      <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                          <strong>GPT-4</strong>
+                          <br><small class="text-muted">Cloud • OpenAI</small>
+                        </div>
+                        <span class="badge bg-blue-lt">API Key Requerida</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card mt-3">
+                <div class="card-header">
+                  <h3 class="card-title">Sistema de Feedback</h3>
+                </div>
+                <div class="card-body">
+                  <div id="feedback-queue">
+                    <p class="text-muted">No hay elementos pendientes de validación</p>
+                  </div>
+                  <button class="btn btn-outline-primary w-100" id="load-feedback-queue">
+                    <i class="ti ti-refresh me-1"></i>Cargar Cola de Feedback
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN AGENTE ACCIONABLE -->
+        <div id="agente" class="content-section">
+          <div class="card">
+            <div class="card-header">
+              <h3 class="card-title">Agente IA Accionable</h3>
+              <div class="card-actions">
+                <span class="badge bg-success-lt" id="agent-status">🤖 Agente Activo</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="agent-command">
+                <h4 class="text-white mb-3">
+                  <i class="ti ti-wand me-2"></i>Comando de Agente
+                </h4>
+                <div class="input-group">
+                  <input type="text" id="agent-command-input" class="form-control command-input" 
+                         placeholder="Ej: 'Entrena IA para empresa X con documentos de la carpeta contratos'"
+                         maxlength="500">
+                  <button id="execute-agent-command" class="btn btn-light">
+                    <i class="ti ti-send me-1"></i>Ejecutar
+                  </button>
+                </div>
+                <small class="d-block mt-2 text-white-50">
+                  El agente ejecutará acciones reales basadas en tu comando
+                </small>
+              </div>
+
+              <div class="row">
+                <div class="col-lg-8">
+                  <div class="card">
+                    <div class="card-header">
+                      <h4 class="card-title">Historial de Acciones</h4>
+                    </div>
+                    <div class="card-body">
+                      <div id="agent-actions-log" class="custom-scroll" style="height: 400px; overflow-y: auto;">
+                        <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+                          <div class="text-center">
+                            <i class="ti ti-robot" style="font-size: 3rem; opacity: 0.3;"></i>
+                            <p class="mt-2">El agente está esperando comandos...</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-lg-4">
+                  <div class="card">
+                    <div class="card-header">
+                      <h4 class="card-title">Comandos Sugeridos</h4>
+                    </div>
+                    <div class="card-body">
+                      <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" data-quick-command="entrenar-empresa-x">
+                          📚 Entrenar IA para Empresa X
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" data-quick-command="procesar-documentos-pendientes">
+                          📄 Procesar documentos pendientes
+                        </button>
+                        <button class="btn btn-outline-warning btn-sm" data-quick-command="generar-reporte-semanal">
+                          📊 Generar reporte semanal
+                        </button>
+                        <button class="btn btn-outline-info btn-sm" data-quick-command="validar-modelo-precision">
+                          🎯 Validar precisión del modelo
+                        </button>
+                        <button class="btn btn-outline-secondary btn-sm" data-quick-command="limpiar-base-datos">
+                          🧹 Limpiar base de datos
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="card mt-3">
+                    <div class="card-header">
+                      <h4 class="card-title">Estado del Agente</h4>
+                    </div>
+                    <div class="card-body">
+                      <div class="row g-2">
+                        <div class="col-6">
+                          <div class="card card-sm">
+                            <div class="card-body p-2 text-center">
+                              <div class="text-muted">Acciones</div>
+                              <div class="h3 mb-0" id="agent-actions-count">0</div>
+                            </div>
+                          </div>
+                        </div>
+                        <div class="col-6">
+                          <div class="card card-sm">
+                            <div class="card-body p-2 text-center">
+                              <div class="text-muted">Éxito</div>
+                              <div class="h3 mb-0" id="agent-success-rate">0%</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="mt-3">
+                        <div class="text-muted mb-1">Última acción:</div>
+                        <small id="agent-last-action">Ninguna</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- SECCIÓN CHAT -->
+        <div id="chat" class="content-section">
+          <div class="card">
+            <div class="card-header">
+              <div class="d-flex justify-content-between align-items-center">
+                <h3 class="card-title">Chat con IA en Tiempo Real</h3>
+                <span class="badge bg-green-lt" id="chat-status">WebSocket Conectado</span>
+              </div>
+            </div>
+            <div class="card-body">
+              <div id="chat-messages" class="mb-3 custom-scroll" style="height: 400px; overflow-y: auto; border: 1px solid #dee2e6; border-radius: 6px; padding: 15px; background: #f8f9fa;">
+                <div class="chat-message system">
+                  <strong>Sistema:</strong> ¡Hola! Soy tu asistente de IA conectado en tiempo real. ¿En qué puedo ayudarte?
+                </div>
+              </div>
+              <div class="input-group">
+                <input type="text" id="chat-input" class="form-control" placeholder="Escribe tu mensaje..." maxlength="1000">
+                <button id="chat-send-button" class="btn btn-primary">
+                  <i class="ti ti-send me-1"></i>Enviar
+                </button>
+              </div>
+              <small class="form-text text-muted">Máximo 1000 caracteres por mensaje</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Scripts Base -->
+<script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
+<!-- PLACEHOLDER: Aquí irán los scripts de funcionalidad en prompts posteriores -->
+
+</body>
+</html>
