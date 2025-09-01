@@ -29,7 +29,7 @@ def init_db():
     Initialize the database by creating all tables.
     This should be called during application startup.
     """
-    from .models import Base
+    from gateway.models import Base
     Base.metadata.create_all(bind=engine)
 
 def get_db():

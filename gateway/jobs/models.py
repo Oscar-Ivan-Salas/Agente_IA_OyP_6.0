@@ -5,7 +5,7 @@ from enum import Enum
 from typing import Any, Dict, List, Optional
 from datetime import datetime
 from uuid import UUID, uuid4
-from pydantic import BaseModel, Field
+from ..pyd_compat import BaseModel, Field
 
 class JobStatus(str, Enum):
     """Estados posibles de un trabajo."""

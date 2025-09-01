@@ -1011,6 +1011,7 @@ animation: pulse 2s infinite;
 </div>
 
 <!-- Scripts Base -->
+<script src="/static/js/compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@tabler/core@1.4.0/dist/js/tabler.min.js"></script>
 
@@ -1023,7 +1024,7 @@ window.AgenteIA = {
   version: '6.0.0',
   config: {
     API_BASE: window.location.origin,
-    WS_URL: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/chat`,
+    WS_URL: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`,
     USE_MOCKS: localStorage.getItem('USE_MOCKS') === '1',
     API_TIMEOUT: parseInt(localStorage.getItem('API_TIMEOUT')) || 10000,
     RETRY_ATTEMPTS: parseInt(localStorage.getItem('RETRY_ATTEMPTS')) || 3,

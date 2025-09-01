@@ -11,8 +11,7 @@ Líneas: ~85
 
 import os
 from typing import Dict, List, Optional
-from pydantic_settings import BaseSettings
-from pydantic import Field
+from gateway.pyd_compat import BaseSettings, Field
 import logging
 
 class GatewaySettings(BaseSettings):
@@ -142,27 +141,37 @@ class GatewaySettings(BaseSettings):
         }
 
     def setup_logging(self) -> None:
-        """Configurar logging del sistema"""
-        logging.basicConfig(
-            level=getattr(logging, self.log_level.upper()),
-            format=self.log_format,
-            handlers=[
-                logging.StreamHandler(),
-                logging.FileHandler(self.log_file)
-            ]
-        )
-        
-        # Configurar loggers específicos
-        loggers = [
-            "uvicorn",
-            "fastapi", 
-            "httpx",
-            "gateway"
-        ]
-        
+        """Configura el sistema de logging"""
+        import logging
+        try:
+            from pythonjsonlogger import jsonlogger
+            _JSON = True
+        except Exception:
+            _JSON = False
+
+        # Limpia handlers previos del reloader para evitar duplicados
+        root = logging.getLogger()
+        for h in list(root.handlers):
+            root.removeHandler(h)
+
+        level = getattr(logging, str(getattr(self, "log_level", "INFO")).upper(), logging.INFO)
+        root.setLevel(level)
+
+        # Configura el handler
+        handler = logging.StreamHandler()
+        if _JSON:
+            fmt = jsonlogger.JsonFormatter('%(asctime)s %(levelname)s %(name)s %(message)s')
+        else:
+            fmt = logging.Formatter('[%(asctime)s] %(levelname)s [%(name)s] %(message)s')
+        handler.setFormatter(fmt)
+        root.addHandler(handler)
+
+        # Configuración específica para loggers
+        loggers = ["uvicorn", "fastapi", "httpx", "gateway"]
         for logger_name in loggers:
             logger = logging.getLogger(logger_name)
-            logger.setLevel(getattr(logging, self.log_level.upper()))
+            logger.setLevel(level)
+            logger.propagate = True  # Asegura que los logs se propaguen al root logger
 
 # ===============================================
 # INSTANCIA GLOBAL DE CONFIGURACIÓN

@@ -20,7 +20,7 @@ import io
 
 from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse, FileResponse
-from pydantic import BaseModel, Field
+from ..pyd_compat import BaseModel, Field
 
 # =====================
 # CONFIGURACIÓN

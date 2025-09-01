@@ -3,7 +3,7 @@ Esquemas para la gestión de proyectos.
 """
 from datetime import datetime
 from typing import Optional, List, Any, Dict, TYPE_CHECKING
-from pydantic import Field, validator, BaseModel
+from ..pyd_compat import Field, validator, BaseModel
 from .base import BaseSchema, TimestampMixin, IDMixin
 
 class ProjectBase(BaseSchema):

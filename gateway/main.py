@@ -16,9 +16,9 @@ from typing import List
 import uvicorn
 from pathlib import Path
 
-from .database import get_db, init_db
-from .routers import projects, tasks, daily_logs, risks, reports
-from .config import settings
+from gateway.database import get_db, init_db
+from gateway.routers import projects, tasks, daily_logs, risks, reports
+from gateway.config import settings
 
 # Configuración del ciclo de vida de la aplicación
 @asynccontextmanager
@@ -44,7 +44,7 @@ app = FastAPI(
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],  # Allow all origins for now, can be restricted later
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -76,7 +76,7 @@ async def health_check():
     return {"status": "ok", "service": "gateway"}
 
 # Import WebSocket manager
-from .websockets.manager import ConnectionManager
+from .ws_app.manager import ConnectionManager
 
 # Create WebSocket manager instance
 manager = ConnectionManager()

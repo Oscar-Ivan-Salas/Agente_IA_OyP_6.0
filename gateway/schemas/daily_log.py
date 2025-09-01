@@ -4,7 +4,7 @@ Esquemas para la gestión de registros diarios.
 from datetime import datetime
 from typing import Optional, Dict, Any, List, TYPE_CHECKING
 from enum import Enum
-from pydantic import Field, validator, BaseModel
+from ..pyd_compat import Field, validator, BaseModel
 from .base import BaseSchema, TimestampMixin, IDMixin
 
 # Para evitar importaciones circulares

@@ -6,7 +6,7 @@ cargando valores desde variables de entorno con valores por defecto.
 """
 import os
 from typing import List, Optional
-from pydantic import BaseSettings, AnyHttpUrl, Field
+from gateway.pyd_compat import BaseSettings, Field, AnyHttpUrl
 
 class Settings(BaseSettings):
     # Configuración básica

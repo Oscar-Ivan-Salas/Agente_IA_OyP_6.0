@@ -4,7 +4,7 @@ Esquemas para la gestión de tareas.
 from datetime import datetime
 from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from enum import Enum
-from pydantic import Field, validator, root_validator
+from ..pyd_compat import Field, validator, root_validator
 from .base import BaseSchema, TimestampMixin, IDMixin
 
 class TaskStatus(str, Enum):

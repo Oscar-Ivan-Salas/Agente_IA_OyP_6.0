@@ -5,7 +5,7 @@ Contiene las clases base que son heredadas por otros esquemas.
 """
 from datetime import datetime
 from typing import Optional, List, Dict, Any
-from pydantic import BaseModel, Field
+from ..pyd_compat import BaseModel, Field
 from uuid import UUID
 
 class BaseSchema(BaseModel):

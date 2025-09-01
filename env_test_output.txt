@@ -1,19 +1,16 @@
 === Environment Test ===
 
-Python Executable: C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\python.exe
+Python Executable: C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Scripts\python.exe
 Python Version: 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
 Working Directory: C:\Users\USUARIO\Agente_IA_OyP_6.0
 
-Pydantic is installed!
-Version: 1.10.13
-Location: C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\__init__.py
-Error importing pydantic._internal: cannot import name '_internal' from 'pydantic' (C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\pydantic\__init__.py)
+Pydantic not installed: No module named 'pydantic'
 
 === Site Packages ===
-- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages
-- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\win32
-- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\win32\lib
-- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib\site-packages\Pythonwin
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages\win32
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages\win32\lib
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages\Pythonwin
 
 === Current Directory Contents ===
 - .env
@@ -23,6 +20,7 @@ Error importing pydantic._internal: cannot import name '_internal' from 'pydanti
 - .pytest_cache
 - .venv
 - .venv_clean
+- .venv_new
 - .vscode
 - 2.0.0
 - activate_env.bat
@@ -30,9 +28,14 @@ Error importing pydantic._internal: cannot import name '_internal' from 'pydanti
 - AUDIT.md
 - CHANGELOG.md
 - CHANGE_POLICY.md
+- check_basic.py
 - check_env.py
 - check_environment.py
+- check_env_errors.py
+- check_env_simple.py
 - check_imports.py
+- check_packages.py
+- check_packages_simple.py
 - check_python.py
 - configs
 - data
@@ -40,6 +43,8 @@ Error importing pydantic._internal: cannot import name '_internal' from 'pydanti
 - diagnostics
 - docker
 - docs
+- env_check.py
+- env_check.txt
 - env_test.py
 - env_test_output.txt
 - EXEC_PLAN.md
@@ -51,6 +56,7 @@ Error importing pydantic._internal: cannot import name '_internal' from 'pydanti
 - install_all_services.py
 - logs
 - manage.py
+- output_test.txt
 - pyproject.toml
 - pytest.ini
 - QUICK_START.md
@@ -61,6 +67,8 @@ Error importing pydantic._internal: cannot import name '_internal' from 'pydanti
 - requirements.lock.txt
 - requirements.txt
 - RISK_REPORT.md
+- run_gateway.bat
+- run_test.bat
 - run_tests.py
 - scripts
 - services
@@ -78,7 +86,9 @@ Error importing pydantic._internal: cannot import name '_internal' from 'pydanti
 - setup_instalador_maestro.py
 - setup_report_generator.py
 - setup_update_ai_engine.py
+- simple_api.py
 - simple_import_test.py
+- simple_output.py
 - simple_test.py
 - sitecustomize.py
 - startup.log
@@ -96,8 +106,8 @@ Error importing pydantic._internal: cannot import name '_internal' from 'pydanti
 - test_runner.py
 - test_server.py
 - test_websocket.py
+- test_write.txt
 - venv
 - verify_setup.py
 - _vibe_quarantine
 - __init__.py
-- __pycache__
