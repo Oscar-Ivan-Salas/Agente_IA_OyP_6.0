@@ -19,6 +19,7 @@ from pathlib import Path
 from gateway.database import get_db, init_db
 from gateway.routers import projects, tasks, daily_logs, risks, reports
 from gateway.config import settings
+from gateway.api.v1.api import api_router as v1_router
 
 # Configuración del ciclo de vida de la aplicación
 @asynccontextmanager
@@ -68,6 +69,9 @@ app.include_router(tasks.router, prefix="/api/tasks", tags=["tasks"])
 app.include_router(daily_logs.router, prefix="/api/daily-logs", tags=["daily-logs"])
 app.include_router(risks.router, prefix="/api/risks", tags=["risks"])
 app.include_router(reports.router, prefix="/api/reports", tags=["reports"])
+
+# Incluir API v1
+app.include_router(v1_router)
 
 # Ruta de salud
 @app.get("/health")

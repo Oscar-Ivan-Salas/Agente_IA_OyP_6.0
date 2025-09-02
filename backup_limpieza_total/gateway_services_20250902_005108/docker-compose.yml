@@ -1,0 +1,54 @@
+version: '3.8'
+
+services:
+  gateway:
+    build: .
+    container_name: gateway
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+      - ./data:/app/data
+    env_file:
+      - .env
+    environment:
+      - ENVIRONMENT=development
+      - DEBUG=true
+    depends_on:
+      - redis
+    networks:
+      - oyp-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    restart: always
+    volumes:
+      - redis_data:/data
+    networks:
+      - oyp-network
+
+  # Uncomment and configure these services as needed
+  # ai-service:
+  #   image: agente-ia-oyp-ai:latest
+  #   container_name: ai-service
+  #   ports:
+  #     - "8001:8001"
+  #   networks:
+  #     - oyp-network
+
+  # docproc-service:
+  #   image: agente-ia-oyp-docproc:latest
+  #   container_name: docproc-service
+  #   ports:
+  #     - "8002:8002"
+  #   networks:
+  #     - oyp-network
+
+networks:
+  oyp-network:
+    driver: bridge
+
+volumes:
+  redis_data:

@@ -297,11 +297,12 @@ async def gateway_proxy_router(request: Request, service_name: str, path: str):
 # =====================
 
 if __name__ == "__main__":
+    import uvicorn
     logger.info("🚀 Iniciando servidor en modo desarrollo...")
     uvicorn.run(
-        "app:app",
+        "gateway.app:app",
         host="0.0.0.0",
-        port=8000, # Puerto del Gateway
+        port=8000,  # Puerto del Gateway
         reload=True,
         log_level="info"
     )
