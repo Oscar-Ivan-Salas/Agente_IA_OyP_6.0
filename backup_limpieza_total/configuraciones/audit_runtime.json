@@ -1,0 +1,82 @@
+{
+  "generated_at": "2025-09-01T19:27:37.116064Z",
+  "base_url": "http://127.0.0.1:8000",
+  "http": {
+    "/": {
+      "status": 200,
+      "ok": true,
+      "time_ms": "25.5ms",
+      "body": "<!doctype html>\n<html lang=\"es\">\n<head>\n<meta charset=\"utf-8\"/>\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1, viewport-fit=cover\"/>\n<meta http-equiv=\"X-UA-Compatible\" content=\"ie=edge\"/>\n<title>Dashboard - Agente IA OyP 6.0</title>\n\n<!-- Tabler 1.4 (CSS) -->\n<link href=\"https:/"
+    },
+    "/salud": {
+      "status": 404,
+      "ok": false,
+      "time_ms": "1.6ms",
+      "body": "{\"detail\":\"Not Found\"}"
+    },
+    "/api/dashboard/stats": {
+      "status": 200,
+      "ok": true,
+      "time_ms": "2.8ms",
+      "body": "{\"success\":true,\"data\":{\"system_status\":{\"status\":\"operational\",\"last_updated\":\"2025-09-01T19:27:37.451732\",\"services\":{\"ai_engine\":{\"status\":\"operational\",\"response_time\":152.2182081045354},\"document_processor\":{\"status\":\"operational\",\"response_time\":85.70615408278238},\"analytics_engine\":{\"status\":"
+    },
+    "/api/training/projects": {
+      "status": 404,
+      "ok": false,
+      "time_ms": "0.5ms",
+      "body": "{\"detail\":\"Not Found\"}"
+    },
+    "/api/agent/history": {
+      "status": 404,
+      "ok": false,
+      "time_ms": "2.1ms",
+      "body": "{\"detail\":\"Not Found\"}"
+    },
+    "/static/js/main.js": {
+      "status": 200,
+      "ok": true,
+      "time_ms": "158.8ms",
+      "body": "'use strict';\n\n// ====================================\n// AGENTE IA OYP 6.0 - MAIN JAVASCRIPT\n// ====================================\n\ndocument.addEventListener('DOMContentLoaded', function() {\n  console.log(\"🚀 Inicializando Agente IA OyP 6.0...\");\n\n  // --- STATE MANAGEMENT ---\n  const state = {\n  "
+    },
+    "/static/js/compat.js": {
+      "status": 200,
+      "ok": true,
+      "time_ms": "74.9ms",
+      "body": "/* ==========================================================================\n   Compatibilidad temprana AgenteIA (NO BORRAR)\n   - Provee AgenteIA.utils y alias en la raíz (AgenteIA.loadScripts / showAlert)\n   - No interfiere con implementaciones existentes (solo rellena huecos)\n   ================="
+    },
+    "/api/ai/analyze": {
+      "status": 404,
+      "ok": false,
+      "time_ms": "1.0ms",
+      "body": "{\"detail\":\"Not Found\"}"
+    },
+    "/api/documents/upload": {
+      "status": 404,
+      "ok": false,
+      "time_ms": "1.5ms",
+      "body": "{\"detail\":\"Not Found\"}"
+    },
+    "/api/analytics/upload_dataset": {
+      "status": 404,
+      "ok": false,
+      "time_ms": "1.0ms",
+      "body": "{\"detail\":\"Not Found\"}"
+    },
+    "/api/reports/generate": {
+      "status": 404,
+      "ok": false,
+      "time_ms": "4.8ms",
+      "body": "{\"detail\":\"Not Found\"}"
+    }
+  },
+  "websockets": {
+    "ws://127.0.0.1:8000/ws": {
+      "error": "websockets no instalado. Ejecuta: pip install websockets",
+      "ok": false
+    },
+    "ws://127.0.0.1:8000/ws/chat": {
+      "error": "websockets no instalado. Ejecuta: pip install websockets",
+      "ok": false
+    }
+  }
+}

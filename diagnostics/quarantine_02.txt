@@ -1,0 +1,29 @@
+# INFORME DE CUARENTENA (VC-02)
+# Fecha: 2025-08-29
+# Hora: 10:23
+
+## ARCHIVOS MOVIDOS A CUARENTENA
+
+1. **gateway/templates/index_new.html**
+   - Ruta de origen: gateway/templates/index_new.html
+   - Ruta de destino: _vibe_quarantine/20250829-1023/templates/index_new.html
+   - Razón: Archivo HTML duplicado que podría causar confusión con index.html
+   - Fecha de modificación original: [Verificar en sistema de archivos]
+
+## ACCIONES REALIZADAS
+
+1. Se creó el directorio de cuarentena: _vibe_quarantine/20250829-1023/
+2. Se movió el archivo index_new.html a la carpeta de cuarentena
+3. Se mantuvo el archivo index.html original en su ubicación
+
+## OBSERVACIONES
+
+- El archivo index_new.html se movió siguiendo las mejores prácticas de no eliminación de archivos.
+- La estructura de directorios original se ha mantenido dentro de la carpeta de cuarentena.
+- Se recomienda revisar el contenido del archivo en cuarentena antes de realizar cualquier acción futura.
+
+## PRÓXIMOS PASOS
+
+1. Verificar que la aplicación funcione correctamente sin el archivo movido.
+2. Si es necesario, restaurar el archivo desde la cuarentena o realizar las modificaciones necesarias en index.html.
+3. Continuar con el siguiente paso del plan (VC-03: Verificar paquete gateway).

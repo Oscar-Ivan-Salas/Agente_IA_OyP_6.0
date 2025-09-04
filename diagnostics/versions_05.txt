@@ -1,0 +1,24 @@
+# INFORME DE VERSIONES (VC-05)
+# Fecha: 2025-08-29
+# Hora: 10:25
+
+## VERSIONES INSTALADAS
+
+### Paquete      | Versión Esperada | Versión Instalada | Estado
+---------------|------------------|-------------------|--------
+pydantic      | 1.10.13          | 1.10.13           | ✅ Correcto
+fastapi       | 0.95.2           | 0.95.2            | ✅ Correcto
+starlette     | 0.27.0           | 0.27.0            | ✅ Correcto
+uvicorn       | 0.29.0           | 0.29.0            | ✅ Correcto
+websockets    | 11.0.3           | 11.0.3            | ✅ Correcto
+watchfiles    | 0.21.0           | 0.21.0            | ✅ Correcto
+
+## OBSERVACIONES
+
+- Todas las dependencias están en sus versiones correctas.
+- El entorno virtual está configurado correctamente en `.venv_clean`.
+- No se encontraron conflictos de versiones.
+
+## PRÓXIMOS PASOS
+
+1. Continuar con VC-06: Verificar el punto de entrada de la aplicación.

@@ -1,0 +1,17 @@
+Python 3.12.10 (tags/v3.12.10:0cc8128, Apr  8 2025, 12:21:36) [MSC v.1943 64 bit (AMD64)]
+Executable: C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Scripts\python.exe
+
+Pydantic is NOT installed or there was an error importing it.
+Error: No module named 'pydantic'
+
+Python path:
+- C:\Users\USUARIO\Agente_IA_OyP_6.0
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\python312.zip
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\DLLs
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312\Lib
+- C:\Users\USUARIO\AppData\Local\Programs\Python\Python312
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages\win32
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages\win32\lib
+- C:\Users\USUARIO\Agente_IA_OyP_6.0\.venv_clean\Lib\site-packages\Pythonwin

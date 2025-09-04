@@ -1,0 +1,79 @@
+[tool.poetry]
+name = "gateway-service"
+version = "0.1.0"
+description = "Gateway service for Agente IA OYP 6.0 platform"
+authors = ["Your Name <your.email@example.com>"]
+license = "MIT"
+readme = "README.md"
+packages = [{include = "gateway"}]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+fastapi = "^0.104.1"
+uvicorn = {extras = ["standard"], version = "^0.24.0"}
+python-jose = {extras = ["cryptography"], version = "^3.3.0"}
+passlib = {extras = ["bcrypt"], version = "^1.7.4"}
+python-dotenv = "^1.0.0"
+pydantic = "^2.4.2"
+pydantic-settings = "^2.1.0"
+sqlalchemy = "^2.0.23"
+alembic = "^1.12.1"
+python-multipart = "^0.0.6"
+python-dateutil = "^2.8.2"
+aiohttp = "^3.9.0"
+redis = {version = "^5.0.0", optional = true}
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.2"
+pytest-asyncio = "^0.21.1"
+httpx = "^0.25.0"
+black = "^23.9.1"
+isort = "^5.12.0"
+mypy = "^1.5.1"
+pylint = "^3.0.2"
+pytest-cov = "^4.1.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_functions = "test_*"
+python_classes = "Test*"
+addopts = "-v --cov=gateway --cov-report=term-missing"
+
+[tool.mypy]
+python_version = "3.9"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+strict_optional = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_no_return = true
+warn_unreachable = true
+disallow_untyped_decorators = true
+disallow_incomplete_defs = true
+disallow_untyped_calls = true
+
+[[tool.mypy.overrides]]
+module = ["sqlalchemy.*", "alembic.*"]
+ignore_missing_imports = true

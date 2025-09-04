@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Agente IA OyP 6.0 - Dashboard</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Iconos de Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/tabler-icons.min.css">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: #2b2e4a;
+            color: white;
+            position: fixed;
+            width: 250px;
+            transition: all 0.3s;
+        }
+        .sidebar .nav-link {
+            color: rgba(255, 255, 255, 0.8);
+            padding: 0.75rem 1.5rem;
+            margin: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .main-content {
+            margin-left: 250px;
+            padding: 20px;
+            transition: all 0.3s;
+        }
+        .card {
+            border: none;
+            border-radius: 0.5rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            font-weight: 600;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="d-flex">
+        <!-- Barra lateral -->
+        <div class="sidebar">
+            <div class="p-3">
+                <h4 class="text-center mb-4">Agente IA OyP 6.0</h4>
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link active" data-target="inicio">
+                            <i class="ti ti-home"></i>
+                            <span class="nav-link-title">Inicio</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-target="documentos">
+                            <i class="ti ti-file-text"></i>
+                            <span class="nav-link-title">Documentos</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-target="analisis">
+                            <i class="ti ti-chart-bar"></i>
+                            <span class="nav-link-title">Análisis</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-target="ia">
+                            <i class="ti ti-brain"></i>
+                            <span class="nav-link-title">IA</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-target="reportes">
+                            <i class="ti ti-report"></i>
+                            <span class="nav-link-title">Reportes</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-target="chat">
+                            <i class="ti ti-message"></i>
+                            <span class="nav-link-title">Chat</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link" data-target="servicios">
+                            <i class="ti ti-server"></i>
+                            <span class="nav-link-title">Servicios</span>
+                        </a>
+                    </li>
+                    <li class="nav-item mt-4">
+                        <a href="#" class="nav-link" data-target="configuracion">
+                            <i class="ti ti-settings"></i>
+                            <span class="nav-link-title">Configuración</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Contenido principal -->
+        <div class="main-content flex-grow-1">
+            <!-- Barra superior -->
+            <nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom mb-4">
+                <div class="container-fluid">
+                    <h1 class="h4 mb-0" id="page-title">Inicio</h1>
+                    <div class="d-flex align-items-center">
+                        <div class="me-3">
+                            <span class="badge bg-primary">v6.0</span>
+                        </div>
+                        <div class="dropdown">
+                            <a href="#" class="d-flex align-items-center text-decoration-none dropdown-toggle" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                <img src="https://ui-avatars.com/api/?name=Usuario" alt="Usuario" class="rounded-circle me-2" width="32" height="32">
+                                <span>Usuario</span>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="#">Perfil</a></li>
+                                <li><a class="dropdown-item" href="#">Configuración</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="#">Cerrar sesión</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Contenedor de alertas -->
+            <div id="alerts-container"></div>
+
+            <!-- Secciones de contenido -->
+            <div class="container-fluid">
+                <!-- Sección Inicio -->
+                <div id="inicio" class="content-section active">
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title">Bienvenido al Panel de Control</h5>
+                                    <p class="card-text">Selecciona una opción del menú lateral para comenzar.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección Documentos -->
+                <div id="documentos" class="content-section">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="card-title mb-0">Cargar Documento</h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="upload-form">
+                                <div class="mb-3">
+                                    <label for="document-file" class="form-label">Seleccionar archivo</label>
+                                    <input class="form-control" type="file" id="document-file">
+                                </div>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ti ti-upload me-2"></i>Subir Documento
+                                </button>
+                            </form>
+                            <div id="extracted-text" class="mt-3 p-3 bg-light rounded">
+                                <!-- Aquí se mostrará el texto extraído -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Otras secciones se agregarán aquí -->
+                <div id="analisis" class="content-section">
+                    <!-- Contenido de análisis -->
+                </div>
+                <div id="ia" class="content-section">
+                    <!-- Contenido de IA -->
+                </div>
+                <div id="reportes" class="content-section">
+                    <!-- Contenido de reportes -->
+                </div>
+                <div id="chat" class="content-section">
+                    <!-- Contenido de chat -->
+                </div>
+                <div id="servicios" class="content-section">
+                    <!-- Contenido de servicios -->
+                </div>
+                <div id="configuracion" class="content-section">
+                    <!-- Contenido de configuración -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS y dependencias -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Navegación entre secciones
+        document.querySelectorAll('.nav-link[data-target]').forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const targetId = this.getAttribute('data-target');
+                showSection(targetId);
+            });
+        });
+
+        // Función para mostrar sección
+        function showSection(sectionId) {
+            // Ocultar todas las secciones
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+
+            // Mostrar la sección seleccionada
+            const targetSection = document.getElementById(sectionId);
+            if (targetSection) {
+                targetSection.classList.add('active');
+            }
+
+            // Actualizar navegación activa
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-target') === sectionId) {
+                    link.classList.add('active');
+                    // Actualizar título de la página
+                    const pageTitle = document.getElementById('page-title');
+                    const linkTitle = link.querySelector('.nav-link-title');
+                    if (pageTitle && linkTitle) {
+                        pageTitle.textContent = linkTitle.textContent;
+                    }
+                }
+            });
+        }
+
+        // Cargar sección desde la URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const section = urlParams.get('section') || 'inicio';
+            showSection(section);
+        });
+
+        // Manejar envío de formulario de carga de documentos
+        const uploadForm = document.getElementById('upload-form');
+        if (uploadForm) {
+            uploadForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const fileInput = document.getElementById('document-file');
+                if (fileInput.files.length > 0) {
+                    // Aquí iría la lógica para subir el archivo
+                    alert('Función de subida de archivo en desarrollo');
+                } else {
+                    alert('Por favor selecciona un archivo');
+                }
+            });
+        }
+    </script>
+</body>
+</html>

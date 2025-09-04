@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }} - Agente IA OyP {{ version }}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Tabler Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons@1.74.0/iconfont/tabler-icons.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --tblr-body-bg: #f5f7fb;
+            --tblr-body-color: #2c3e50;
+            --tblr-card-bg: #ffffff;
+            --tblr-card-border: rgba(0, 0, 0, 0.125);
+            --tblr-card-header-bg: rgba(0, 0, 0, 0.03);
+            --tblr-text-muted: #6c757d;
+        }
+        
+        [data-bs-theme="dark"] {
+            --tblr-body-bg: #1a1d21;
+            --tblr-body-color: #e9ecef;
+            --tblr-card-bg: #2a2e32;
+            --tblr-card-border: rgba(255, 255, 255, 0.1);
+            --tblr-card-header-bg: rgba(0, 0, 0, 0.2);
+            --tblr-text-muted: #adb5bd;
+        }
+        
+        body {
+            background-color: var(--tblr-body-bg);
+            color: var(--tblr-body-color);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            line-height: 1.5;
+        }
+        
+        .content-section {
+            display: none;
+            padding: 1.5rem 0;
+            animation: fadeIn 0.35s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .content-section.active {
+            display: block;
+        }
+        
+        .card {
+            border: 1px solid var(--tblr-card-border);
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            background-color: var(--tblr-card-bg);
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+        
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            background-color: var(--tblr-card-header-bg);
+            border-bottom: 1px solid var(--tblr-card-border);
+            padding: 1rem 1.25rem;
+            border-top-left-radius: 0.5rem !important;
+            border-top-right-radius: 0.5rem !important;
+        }
+        
+        .card-title {
+            margin-bottom: 0;
+            font-weight: 600;
+            color: var(--tblr-body-color);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Navbar styles */
+        .navbar {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+        }
+        
+        /* Form elements */
+        .form-control, .form-select {
+            border: 1px solid var(--tblr-card-border);
+            background-color: var(--tblr-card-bg);
+            color: var(--tblr-body-color);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #86b7fe;
+            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+        }
+        
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            transition: all 0.2s ease-in-out;
+        }
+        
+        /* Utility classes */
+        .cursor-pointer {
+            cursor: pointer;
+        }
+        
+        .text-muted {
+            color: var(--tblr-text-muted) !important;
+        }
+        
+        /* Responsive images */
+        .img-fluid {
+            max-width: 100%;
+            height: auto;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="ti ti-bolt me-2"></i>
+                Agente IA OyP {{ version }}
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#" data-section="inicio">Inicio</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="analisis">Análisis</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="documentos">Documentos</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="entrenamiento">Entrenamiento</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="agente">Agente</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="chat">Chat</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#" data-section="configuracion">Configuración</a>
+                    </li>
+                </ul>
+                <div class="d-flex align-items-center">
+                    <span class="navbar-text me-3">
+                        <i class="ti ti-circle-check text-success me-1"></i>
+                        <span id="connection-status">Conectado</span>
+                    </span>
+                    <button class="btn btn-outline-light" id="theme-toggle">
+                        <i class="ti ti-moon me-1"></i>
+                        <span>Modo Oscuro</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container-xl">
+        <!-- Alerts Container -->
+        <div id="alerts-container" class="mb-3"></div>
+        
+        <!-- Content Sections -->
+        <div id="main-content">
+            <!-- Analytics Section -->
+            <div id="analisis" class="content-section">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h3 class="card-title">Analytics SPSS - Análisis Estadístico</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="dataset-file" class="form-label">Subir Dataset</label>
+                                    <input type="file" id="dataset-file" class="form-control" accept=".csv,.xlsx,.json">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="analysis-type" class="form-label">Tipo de Análisis</label>
+                                    <select id="analysis-type" class="form-select">
+                                        <option value="descriptive">Estadísticas Descriptivas</option>
+                                        <option value="correlation">Análisis de Correlación</option>
+                                        <option value="regression">Regresión Lineal</option>
+                                        <option value="clustering">Clustering K-means</option>
+                                        <option value="anova">ANOVA</option>
+                                        <option value="chi_square">Chi-cuadrado</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="analyze-dataset-button" class="btn btn-primary">
+                            <i class="ti ti-chart-line me-1"></i>Analizar Dataset
+                        </button>
+                        <div id="analysis-results" class="mt-4"></div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Uso de Recursos del Sistema</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="recursos-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                <h3 class="card-title">Distribución de Almacenamiento</h3>
+                            </div>
+                            <div class="card-body">
+                                <canvas id="almacenamiento-chart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+    'use strict';
+
+    // Configuración Global
+    window.AgenteIA = {
+        version: '6.0.0',
+        config: {
+            API_BASE: window.location.origin,
+            WS_URL: `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws`,
+            USE_MOCKS: localStorage.getItem('USE_MOCKS') !== '0',
+            API_TIMEOUT: parseInt(localStorage.getItem('API_TIMEOUT')) || 10000,
+            RETRY_ATTEMPTS: parseInt(localStorage.getItem('RETRY_ATTEMPTS')) || 3,
+            DEBUG: false
+        },
+        state: {
+            currentSection: 'inicio',
+            websocketConnected: false,
+            trainingInProgress: false,
+            agentStats: { actionsCount: 0, successCount: 0, lastAction: 'Ninguna' },
+            chartInstances: {}
+        }
+    };
+
+    // Inicialización
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('🚀 Inicializando Agente IA OyP 6.0...');
+        
+        // Configurar navegación
+        setupNavigation();
+        
+        // Configurar tema
+        setupTheme();
+        
+        // Mostrar sección inicial
+        showSection('inicio');
+        
+        // Inicializar gráficos
+        initializeCharts();
+        
+        console.log('✅ Dashboard inicializado correctamente');
+    });
+
+    // Configurar navegación
+    function setupNavigation() {
+        // Navegación por secciones
+        document.querySelectorAll('[data-section]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sectionId = link.getAttribute('data-section');
+                showSection(sectionId);
+            });
+        });
+        
+        // Botón de tema
+        const themeToggle = document.getElementById('theme-toggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleTheme);
+        }
+    }
+
+    // Mostrar sección
+    function showSection(sectionId) {
+        // Ocultar todas las secciones
+        document.querySelectorAll('.content-section').forEach(section => {
+            section.classList.remove('active');
+        });
+        
+        // Mostrar sección seleccionada
+        const targetSection = document.getElementById(sectionId);
+        if (targetSection) {
+            targetSection.classList.add('active');
+            window.AgenteIA.state.currentSection = sectionId;
+            
+            // Actualizar navegación activa
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('data-section') === sectionId) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Disparar evento personalizado
+            document.dispatchEvent(new CustomEvent('sectionChanged', { 
+                detail: { section: sectionId } 
+            }));
+        }
+    }
+
+    // Configurar tema
+    function setupTheme() {
+        // Cargar tema guardado o usar el del sistema
+        const savedTheme = localStorage.getItem('theme') || 'system';
+        setTheme(savedTheme, true);
+    }
+
+    // Cambiar tema
+    function toggleTheme() {
+        const currentTheme = document.documentElement.getAttribute('data-bs-theme');
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        setTheme(newTheme);
+    }
+
+    // Establecer tema
+    function setTheme(theme, initialLoad = false) {
+        const html = document.documentElement;
+        const themeToggle = document.getElementById('theme-toggle');
+        
+        if (theme === 'system') {
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            html.setAttribute('data-bs-theme', prefersDark ? 'dark' : 'light');
+        } else {
+            html.setAttribute('data-bs-theme', theme);
+        }
+        
+        // Actualizar ícono y texto del botón
+        if (themeToggle) {
+            const icon = themeToggle.querySelector('i');
+            const text = themeToggle.querySelector('span');
+            
+            if (theme === 'dark') {
+                icon.classList.remove('ti-moon');
+                icon.classList.add('ti-sun');
+                text.textContent = 'Modo Claro';
+            } else {
+                icon.classList.remove('ti-sun');
+                icon.classList.add('ti-moon');
+                text.textContent = 'Modo Oscuro';
+            }
+        }
+        
+        // Guardar preferencia
+        if (!initialLoad) {
+            localStorage.setItem('theme', theme);
+        }
+    }
+
+    // Inicializar gráficos
+    function initializeCharts() {
+        // Gráfico de recursos
+        const recursosCtx = document.getElementById('recursos-chart');
+        if (recursosCtx) {
+            window.AgenteIA.state.chartInstances.recursos = new Chart(recursosCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Uso de CPU %',
+                        data: [65, 59, 80, 81, 56, 55],
+                        borderColor: '#467fcf',
+                        tension: 0.3,
+                        fill: false
+                    }, {
+                        label: 'Uso de Memoria %',
+                        data: [28, 48, 40, 19, 86, 27],
+                        borderColor: '#5eba00',
+                        tension: 0.3,
+                        fill: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Gráfico de almacenamiento
+        const almacenamientoCtx = document.getElementById('almacenamiento-chart');
+        if (almacenamientoCtx) {
+            window.AgenteIA.state.chartInstances.almacenamiento = new Chart(almacenamientoCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Documentos', 'Modelos', 'Sistema', 'Libre'],
+                    datasets: [{
+                        data: [300, 150, 50, 200],
+                        backgroundColor: ['#467fcf', '#5eba00', '#f1c40f', '#e9ecef'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                        title: {
+                            display: false
+                        }
+                    },
+                    cutout: '70%'
+                }
+            });
+        }
+    }
+
+    // Mostrar alerta
+    function showAlert(message, type = 'info') {
+        const alertsContainer = document.getElementById('alerts-container');
+        if (!alertsContainer) return;
+        
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+        alertDiv.role = 'alert';
+        
+        alertDiv.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Cerrar"></button>
+        `;
+        
+        alertsContainer.appendChild(alertDiv);
+        
+        // Auto-eliminar después de 5 segundos
+        setTimeout(() => {
+            if (alertDiv.parentNode) {
+                alertDiv.remove();
+            }
+        }, 5000);
+    }
+
+    // Manejar el botón de análisis
+    const analyzeBtn = document.getElementById('analyze-dataset-button');
+    if (analyzeBtn) {
+        analyzeBtn.addEventListener('click', function() {
+            const fileInput = document.getElementById('dataset-file');
+            const analysisType = document.getElementById('analysis-type').value;
+            
+            if (!fileInput.files || fileInput.files.length === 0) {
+                showAlert('Por favor, selecciona un archivo para analizar', 'warning');
+                return;
+            }
+            
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+            
+            reader.onload = function(e) {
+                // Simular análisis
+                analyzeBtn.disabled = true;
+                analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>Analizando...';
+                
+                // Simular tiempo de procesamiento
+                setTimeout(() => {
+                    const resultsDiv = document.getElementById('analysis-results');
+                    if (resultsDiv) {
+                        resultsDiv.innerHTML = `
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">Resultados del Análisis</h4>
+                                    <small class="text-muted">${analysisType} - ${file.name}</small>
+                                </div>
+                                <div class="card-body">
+                                    <div class="alert alert-success">
+                                        <i class="ti ti-check me-2"></i>
+                                        Análisis completado exitosamente
+                                    </div>
+                                    <pre class="bg-light p-3 rounded">${JSON.stringify({
+                                        archivo: file.name,
+                                        tipo: file.type,
+                                        tamaño: (file.size / 1024).toFixed(2) + ' KB',
+                                        tipo_analisis: analysisType,
+                                        fecha: new Date().toLocaleString(),
+                                        resultado: 'Este es un resultado de ejemplo. Los datos reales se cargarán cuando se implemente la lógica del backend.'
+                                    }, null, 2)}</pre>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    analyzeBtn.disabled = false;
+                    analyzeBtn.innerHTML = '<i class="ti ti-chart-line me-1"></i>Analizar Dataset';
+                    
+                    showAlert('Análisis completado exitosamente', 'success');
+                }, 2000);
+            };
+            
+            reader.readAsText(file);
+        });
+    }
+    
+    // Manejar cambios en el tema del sistema
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', e => {
+        const currentTheme = localStorage.getItem('theme');
+        if (currentTheme === 'system') {
+            setTheme('system');
+        }
+    });
+    
+    // Hacer funciones accesibles globalmente
+    window.showAlert = showAlert;
+    </script>
+</body>
+</html>
